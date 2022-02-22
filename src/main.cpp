@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <vector>
 #include "patcher_api.h"
 
 #define STRINGIFY(x) #x
@@ -55,7 +56,10 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
             using namespace MeshTaichi;
             using RT = MeshRelationType;
             using ET = MeshElementType;
+            using namespace std;
             auto mesh = Mesh::load_mesh(mesh_name);
+            static vector<shared_ptr<Mesh> > mesh_ptrs;
+            mesh_ptrs.push_back(mesh);
             std::vector<RT> rt_arr;
             std::vector<ET> et_arr;
             for (std::string str : relations) {
@@ -65,5 +69,10 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
             }
             int patch_size = 256;
             patcher->run(mesh.get(), patch_size, et_arr, rt_arr);
-        });
+        })
+        .def("export_json", [](MeshTaichi::Patcher *patcher) {
+            std::string json = patcher->export_json();
+            return json;
+        })
+        ;
 }

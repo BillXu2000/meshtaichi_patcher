@@ -111,7 +111,6 @@ std::string run_mesh(std::string mesh_name, std::vector<std::string> relations) 
     et_arr.push_back(ET(name2dim[str[1]]));
   }
   int patch_size = 256;
-  return Patcher::run(mesh, patch_size, et_arr, rt_arr);
   Patcher patcher;
   patcher.run(mesh.get(), patch_size, et_arr, rt_arr);
   return patcher.export_json();

@@ -599,6 +599,11 @@ std::string Patcher::export_json() {
 
 void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles, std::vector<MeshRelationType> rels) {
   mesh = _mesh;
+  if (mesh->topology == MeshTopology::Tetrahedron) {
+    mesh->make_rel(MeshRelationType::CC);
+  } else {
+    mesh->make_rel(MeshRelationType::FF);
+  }
   initialize(patch_size);
   main_relation = rels[0];
   generate(1 << 20, 1);

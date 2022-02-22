@@ -118,38 +118,6 @@ class Patcher {
 
   std::string export_json();
 
-  static std::string run(std::shared_ptr<Mesh> mesh, 
-      int patch_size, 
-      std::vector<MeshElementType> eles, 
-      std::vector<MeshRelationType> rels) {
-    clock_t start_time, end_time;
-    Patcher patcher(mesh);
-    patcher.initialize(patch_size);
-    patcher.main_relation = rels[0];
-    start_time = clock();
-    patcher.generate(1 << 20, 1);
-    end_time = clock();
-    //std::cout << "Patching Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
-    
-    std::unordered_set<MeshElementType> _eles;
-    std::unordered_set<MeshRelationType> _rels;
-    for (auto ele : eles) _eles.insert(ele);
-    for (auto rel : rels) _rels.insert(rel);
-    for (const auto &rel : _rels) {
-      _eles.insert(MeshElementType(from_end_element_order(rel)));
-      _eles.insert(MeshElementType(to_end_element_order(rel)));
-    }
-    start_time = clock();
-    patcher.build_patches(_eles, _rels);
-    end_time = clock();
-    //std::cout << "Build Patches Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
-    
-    
-    //mesh->print();
-
-    return patcher.export_json(_eles, _rels);
-  }
-
   void run(Mesh* _mesh, 
       int patch_size, 
       std::vector<MeshElementType> eles, 
