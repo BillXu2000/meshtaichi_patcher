@@ -44,4 +44,26 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
 #endif
 
     m.def("run_mesh", &MeshTaichi::run_mesh);
+    py::class_<MeshTaichi::Patcher>(m, "Patcher")
+        .def(py::init<>())
+        .def("run", [](MeshTaichi::Patcher *patcher, std::string mesh_name, std::vector<std::string> relations) {
+            std::map<char, int> name2dim;
+            name2dim['v'] = 0;
+            name2dim['e'] = 1;
+            name2dim['f'] = 2;
+            name2dim['c'] = 3;
+            using namespace MeshTaichi;
+            using RT = MeshRelationType;
+            using ET = MeshElementType;
+            auto mesh = Mesh::load_mesh(mesh_name);
+            std::vector<RT> rt_arr;
+            std::vector<ET> et_arr;
+            for (std::string str : relations) {
+                rt_arr.push_back(RT(name2dim[str[0]] * 4 + name2dim[str[1]]));
+                et_arr.push_back(ET(name2dim[str[0]]));
+                et_arr.push_back(ET(name2dim[str[1]]));
+            }
+            int patch_size = 256;
+            patcher->run(mesh.get(), patch_size, et_arr, rt_arr);
+        });
 }

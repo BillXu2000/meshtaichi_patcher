@@ -593,6 +593,10 @@ std::string Patcher::export_json(std::unordered_set<MeshElementType> eles,
   return out.str();
 }
 
+std::string Patcher::export_json() {
+  return export_json(ex_eles, ex_rels);
+}
+
 void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles, std::vector<MeshRelationType> rels) {
   mesh = _mesh;
   initialize(patch_size);
@@ -608,5 +612,7 @@ void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles
     _eles.insert(MeshElementType(to_end_element_order(rel)));
   }
   build_patches(_eles, _rels);
+  ex_eles = _eles;
+  ex_rels = _rels;
 }
 }

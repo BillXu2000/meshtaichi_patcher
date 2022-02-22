@@ -257,4 +257,13 @@ std::shared_ptr<Mesh> load_tet(std::string filename, bool shuffle) {
   return mesh;
 }
 
+std::shared_ptr<Mesh> Mesh::load_mesh(std::string filename) {
+  if (filename.substr(filename.size() - 3) == "obj") {
+    return load_obj(filename, false);
+  }
+  else {
+    return load_tet(filename, false);
+  }
+}
+
 }

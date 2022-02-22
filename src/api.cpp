@@ -102,14 +102,7 @@ std::string run_mesh(std::string mesh_name, std::vector<std::string> relations) 
   name2dim['e'] = 1;
   name2dim['f'] = 2;
   name2dim['c'] = 3;
-  std::shared_ptr<Mesh> mesh;
-  bool shuffle = false;
-  if (mesh_name.substr(mesh_name.size() - 3) == "obj") {
-    mesh = load_obj(mesh_name, shuffle);
-  }
-  else {
-    mesh = load_tet(mesh_name, shuffle);
-  }
+  std::shared_ptr<Mesh> mesh = Mesh::load_mesh(mesh_name);
   std::vector<RT> rt_arr;
   std::vector<ET> et_arr;
   for (std::string str : relations) {
@@ -119,7 +112,9 @@ std::string run_mesh(std::string mesh_name, std::vector<std::string> relations) 
   }
   int patch_size = 256;
   return Patcher::run(mesh, patch_size, et_arr, rt_arr);
-
+  Patcher patcher;
+  patcher.run(mesh.get(), patch_size, et_arr, rt_arr);
+  return patcher.export_json();
 }
 
 }

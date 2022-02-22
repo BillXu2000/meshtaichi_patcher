@@ -110,8 +110,13 @@ class Patcher {
   std::unordered_map<MeshElementType, int> max_num_per_patch;
   std::unordered_map<MeshRelationType, LocalRel> local_rels;
 
+  std::unordered_set<MeshElementType> ex_eles; 
+  std::unordered_set<MeshRelationType> ex_rels;
+
   std::string export_json(std::unordered_set<MeshElementType> eles, 
                    std::unordered_set<MeshRelationType> rels);
+
+  std::string export_json();
 
   static std::string run(std::shared_ptr<Mesh> mesh, 
       int patch_size, 
