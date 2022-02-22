@@ -1,1 +1,1 @@
-print(233)
+from meshtaichi_patcher_core import *

@@ -10,7 +10,7 @@ int add(int i, int j) {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(meshtaichi_patcher, m) {
+PYBIND11_MODULE(meshtaichi_patcher_core, m) {
     m.doc() = R"pbdoc(
         Pybind11 example plugin
         -----------------------
