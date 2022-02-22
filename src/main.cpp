@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "patcher_api.h"
 
 #define STRINGIFY(x) #x
@@ -42,5 +43,5 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
     m.attr("__version__") = "dev";
 #endif
 
-    m.def("run_obj", &MeshTaichi::run_obj);
+    m.def("run_mesh", &MeshTaichi::run_mesh);
 }

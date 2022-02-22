@@ -26,6 +26,8 @@ class Patcher {
   std::set<int> lock;
   MeshRelationType main_relation;
 
+  Patcher() {}
+
   Patcher(std::shared_ptr<Mesh> mesh_) {
     mesh = mesh_.get();
     if (mesh->topology == MeshTopology::Tetrahedron) {
@@ -108,15 +110,13 @@ class Patcher {
   std::unordered_map<MeshElementType, int> max_num_per_patch;
   std::unordered_map<MeshRelationType, LocalRel> local_rels;
 
-  void export_json(std::string filename,
-                   std::unordered_set<MeshElementType> eles, 
+  std::string export_json(std::unordered_set<MeshElementType> eles, 
                    std::unordered_set<MeshRelationType> rels);
 
-  static Patcher run(std::shared_ptr<Mesh> mesh, 
+  static std::string run(std::shared_ptr<Mesh> mesh, 
       int patch_size, 
       std::vector<MeshElementType> eles, 
-      std::vector<MeshRelationType> rels,
-      std::string filename) {
+      std::vector<MeshRelationType> rels) {
     clock_t start_time, end_time;
     Patcher patcher(mesh);
     patcher.initialize(patch_size);
@@ -124,8 +124,7 @@ class Patcher {
     start_time = clock();
     patcher.generate(1 << 20, 1);
     end_time = clock();
-    std::cout << "Patching Time : "
-            << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+    //std::cout << "Patching Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
     
     std::unordered_set<MeshElementType> _eles;
     std::unordered_set<MeshRelationType> _rels;
@@ -138,14 +137,18 @@ class Patcher {
     start_time = clock();
     patcher.build_patches(_eles, _rels);
     end_time = clock();
-    std::cout << "Build Patches Time : "
-            << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+    //std::cout << "Build Patches Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
     
-    patcher.export_json(filename, _eles, _rels);
-    mesh->print();
+    
+    //mesh->print();
 
-    return patcher;
+    return patcher.export_json(_eles, _rels);
   }
+
+  void run(Mesh* _mesh, 
+      int patch_size, 
+      std::vector<MeshElementType> eles, 
+      std::vector<MeshRelationType> rels);
 };
 
 }

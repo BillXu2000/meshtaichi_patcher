@@ -13,6 +13,7 @@ std::string element_type_name(MeshElementType type) {
     return "Cell";
   else {
     assert(0);
+    return "";
   }
 }
 
@@ -30,6 +31,7 @@ std::string conv_type_name(ConvType type) {
     return "global to reordered";
   } else {
     assert(0);
+    return "";
   }
 }
 

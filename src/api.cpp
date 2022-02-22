@@ -75,33 +75,28 @@ int main_ra(int argc, char* argv[]) {
       et_arr.push_back(ET(name2dim[args["extra"][i]]));
       et_arr.push_back(ET(name2dim[args["extra"][i + 1]]));
     }
-    printf("outer = %d, inner = %d\n", outer, inner);
-    //Patcher::run(mesh, stoi(args["patch_size"]), {ET(outer), ET(inner), ET::Vertex}, {RT(outer * 4 + inner), RT(outer * 4)}, args["output"]);
-    //Patcher::run(mesh, stoi(args["patch_size"]), {ET(outer), ET(inner), ET::Vertex}, {RT(outer * 4 + inner), RT(outer * 4), RT(inner * 4)}, args["output"]);
-    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Cell, ET::Edge, ET::Vertex}, {RT::CV, RT::EV, RT::VE, RT::VV}, args["output"]);
-    Patcher::run(mesh, stoi(args["patch_size"]), et_arr, rt_arr, args["output"]);
-    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Vertex, ET::Edge}, {RT::VE, RT::EV, RT::EE}, args["output"]);
+    //Patcher::run(mesh, stoi(args["patch_size"]), et_arr, rt_arr, args["output"]);
   }
   else if (args.find("obj") == args.end()) {
     auto mesh = load_tet(args["tet"]);
-    Patcher::run(mesh, stoi(args["patch_size"]), {ET::Cell, ET::Edge, ET::Vertex}, {RT::CV, RT::EV, RT::VE, RT::VV}, args["output"]);
+    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Cell, ET::Edge, ET::Vertex}, {RT::CV, RT::EV, RT::VE, RT::VV}, args["output"]);
   }
   else if (args["relation"] == "fv") {
     auto mesh = load_obj(args["obj"]);
-    Patcher::run(mesh, stoi(args["patch_size"]), {ET::Face, ET::Vertex}, {RT::FV, RT::VF, RT::VV}, args["output"]);
+    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Face, ET::Vertex}, {RT::FV, RT::VF, RT::VV}, args["output"]);
   }
   else if (args["relation"] == "cv") {
     auto mesh = load_obj(args["obj"]);
-    Patcher::run(mesh, stoi(args["patch_size"]), {ET::Cell, ET::Vertex}, {RT::CV, RT::VC, RT::VV}, args["output"]);
+    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Cell, ET::Vertex}, {RT::CV, RT::VC, RT::VV}, args["output"]);
   }
   else {
     auto mesh = load_obj(args["obj"]);
-    Patcher::run(mesh, stoi(args["patch_size"]), {ET::Edge, ET::Vertex}, {RT::EV, RT::VE, RT::VV}, args["output"]);
+    //Patcher::run(mesh, stoi(args["patch_size"]), {ET::Edge, ET::Vertex}, {RT::EV, RT::VE, RT::VV}, args["output"]);
   }
   return 0;
 }
 
-void run_obj(std::string obj_name, std::vector<std::string> relations, std::string json_name) {
+std::string run_mesh(std::string mesh_name, std::vector<std::string> relations) {
   std::map<char, int> name2dim;
   name2dim['v'] = 0;
   name2dim['e'] = 1;
@@ -109,7 +104,12 @@ void run_obj(std::string obj_name, std::vector<std::string> relations, std::stri
   name2dim['c'] = 3;
   std::shared_ptr<Mesh> mesh;
   bool shuffle = false;
-  mesh = load_obj(obj_name, shuffle);
+  if (mesh_name.substr(mesh_name.size() - 3) == "obj") {
+    mesh = load_obj(mesh_name, shuffle);
+  }
+  else {
+    mesh = load_tet(mesh_name, shuffle);
+  }
   std::vector<RT> rt_arr;
   std::vector<ET> et_arr;
   for (std::string str : relations) {
@@ -118,7 +118,8 @@ void run_obj(std::string obj_name, std::vector<std::string> relations, std::stri
     et_arr.push_back(ET(name2dim[str[1]]));
   }
   int patch_size = 256;
-  Patcher::run(mesh, patch_size, et_arr, rt_arr, json_name);
+  return Patcher::run(mesh, patch_size, et_arr, rt_arr);
+
 }
 
 }

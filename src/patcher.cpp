@@ -2,6 +2,7 @@
 
 #include <set>
 #include <cassert>
+#include <sstream>
 
 namespace MeshTaichi {
 
@@ -56,7 +57,7 @@ void Patcher::generate(int max_iteration, int add_per_iter) {
   int iter = 0;
   while (iter < max_iteration) {
     ++iter;
-    std::cout << iter << std::endl;
+    //std::cout << iter << std::endl;
     patch_assign();
     int over_count = construct_patch();
     if (over_count == 0) break;
@@ -187,7 +188,7 @@ int Patcher::construct_patch() {
     if (sz > desired_size) over_count++;
     max_sz = std::max(max_sz, sz);
   }
-  std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
+  //std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
   // printf("max_size[0] = %d, locksize = %d\n", max_size[0], lock.size());
   // printf("max_size[1] = %d, locksize = %d\n", max_size[1], lock.size());
   return over_count;
@@ -438,6 +439,7 @@ void Patcher::build_patches(std::unordered_set<MeshElementType> eles,
             return pi.ribbon_g2l[to_type].find(idx)->second;
           } else {
             assert(0);
+            return -1;
           }
         };
 
@@ -466,7 +468,7 @@ void Patcher::build_patches(std::unordered_set<MeshElementType> eles,
     total += val;
     mm = std::max(mm, val);
   }
-  std::cout << "average: " << total / num_seeds << " max: "<< mm << std::endl;
+  //std::cout << "average: " << total / num_seeds << " max: "<< mm << std::endl;
   
 
   element_owner.clear();
@@ -520,10 +522,10 @@ void Patcher::build_patches(std::unordered_set<MeshElementType> eles,
   patches_info.clear();
 }
 
-void Patcher::export_json(std::string filename,
-                          std::unordered_set<MeshElementType> eles, 
+std::string Patcher::export_json(std::unordered_set<MeshElementType> eles, 
                           std::unordered_set<MeshRelationType> rels) {
-  std::fstream out(filename, std::ios::out);
+  //std::fstream out(filename, std::ios::out);
+  std::stringstream out;
   bool comma_flag = false;
   out << "{\n";
 
@@ -588,6 +590,23 @@ void Patcher::export_json(std::string filename,
   out << "  ]}\n";
 
   out << "}";
-  out.close();
+  return out.str();
+}
+
+void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles, std::vector<MeshRelationType> rels) {
+  mesh = _mesh;
+  initialize(patch_size);
+  main_relation = rels[0];
+  generate(1 << 20, 1);
+  
+  std::unordered_set<MeshElementType> _eles;
+  std::unordered_set<MeshRelationType> _rels;
+  for (auto ele : eles) _eles.insert(ele);
+  for (auto rel : rels) _rels.insert(rel);
+  for (const auto &rel : _rels) {
+    _eles.insert(MeshElementType(from_end_element_order(rel)));
+    _eles.insert(MeshElementType(to_end_element_order(rel)));
+  }
+  build_patches(_eles, _rels);
 }
 }
