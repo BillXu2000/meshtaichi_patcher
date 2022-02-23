@@ -112,8 +112,8 @@ int Patcher::construct_patch() {
   // Calc Statstics
   
   for (int i = 0; i < num_seeds; ++i) {
-    //max_size[i] = offset[i];
-    max_size[i] = 0;
+    max_size[i] = offset[i];
+    //max_size[i] = 0;
   }
 
   for (int i = 1; i <= num_seeds; ++i) {
@@ -125,70 +125,69 @@ int Patcher::construct_patch() {
     value[off] = i;
   }
 
-  /*std::vector<std::set<int> > ribbon(num_seeds);
-  const auto &R = get_relation();
-  for (int i = 0; i < num_seeds; ++i) {
-    int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
-    for (int j = off_start; j < off_end; ++j) {
-      const auto &p = value[j];
-      for (const auto &q : R[p]) {
-          if (seeds[q] != seeds[p] && ribbon[i].find(q) == ribbon[i].end()) {
-            max_size[i]++;
-            ribbon[i].insert(q);
-        }
-      }
-    }
-  }*/
-  std::vector<std::set<int> > ribbon(num_seeds);
-  /*const auto &VR = mesh->make_rel(relation_by_orders(0, get_highest_order()));
-  const auto &RV = mesh->make_rel(relation_by_orders(get_highest_order(), 0));*/
-  int outer = int(main_relation) / 4;
-  //if (outer != get_highest_order()) {
-  if (true) {
-    const auto &VR = mesh->make_rel(main_relation);
-    const auto &RV = mesh->make_rel(relation_by_orders(get_highest_order(), int(main_relation) / 4));
-    for (int i = 0; i < num_seeds; ++i) {
-      if (lock.count(i)) continue;
-      //int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
-      int off_start = offset[i], off_end = offset[i+1];
-      for (int j = off_start; j < off_end; ++j) {
-        const auto &p = value[j];
-        for (const auto &v : RV[p]) {
-          for (const auto &q : VR[v]) {
-            if (ribbon[i].count(q) == 0) {
-              max_size[i]++;
-              ribbon[i].insert(q);
-            }
-          }
-        }
-      }
-    }
-  }
-  else {
-    const auto &VR = mesh->make_rel(main_relation);
-    for (int i = 0; i < num_seeds; ++i) {
-      if (lock.count(i)) continue;
-      //int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
-      int off_start = offset[i], off_end = offset[i+1];
-      for (int j = off_start; j < off_end; ++j) {
-        const auto &p = value[j];
-        for (const auto &q : VR[p]) {
-          if (ribbon[i].count(q) == 0) {
-            max_size[i]++;
-            ribbon[i].insert(q);
-          }
-        }
-      }
-    }
-
-  }
+  // std::vector<std::set<int> > ribbon(num_seeds);
+  // const auto &R = get_relation();
+  // for (int i = 0; i < num_seeds; ++i) {
+  //   int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
+  //   for (int j = off_start; j < off_end; ++j) {
+  //     const auto &p = value[j];
+  //     for (const auto &q : R[p]) {
+  //         if (seeds[q] != seeds[p] && ribbon[i].find(q) == ribbon[i].end()) {
+  //           max_size[i]++;
+  //           ribbon[i].insert(q);
+  //       }
+  //     }
+  //   }
+  // }
+  // std::vector<std::set<int> > ribbon(num_seeds);
+  // /*const auto &VR = mesh->make_rel(relation_by_orders(0, get_highest_order()));
+  // const auto &RV = mesh->make_rel(relation_by_orders(get_highest_order(), 0));*/
+  // int outer = int(main_relation) / 4;
+  // //if (outer != get_highest_order()) {
+  // if (true) {
+  //   const auto &VR = mesh->make_rel(main_relation);
+  //   const auto &RV = mesh->make_rel(relation_by_orders(get_highest_order(), int(main_relation) / 4));
+  //   for (int i = 0; i < num_seeds; ++i) {
+  //     if (lock.count(i)) continue;
+  //     //int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
+  //     int off_start = offset[i], off_end = offset[i+1];
+  //     for (int j = off_start; j < off_end; ++j) {
+  //       const auto &p = value[j];
+  //       for (const auto &v : RV[p]) {
+  //         for (const auto &q : VR[v]) {
+  //           if (ribbon[i].count(q) == 0) {
+  //             max_size[i]++;
+  //             ribbon[i].insert(q);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+  // else {
+  //   const auto &VR = mesh->make_rel(main_relation);
+  //   for (int i = 0; i < num_seeds; ++i) {
+  //     if (lock.count(i)) continue;
+  //     //int off_start = offset[i], off_end = (i < num_seeds - 1 ? offset[i+1] : upd_vis.size());
+  //     int off_start = offset[i], off_end = offset[i+1];
+  //     for (int j = off_start; j < off_end; ++j) {
+  //       const auto &p = value[j];
+  //       for (const auto &q : VR[p]) {
+  //         if (ribbon[i].count(q) == 0) {
+  //           max_size[i]++;
+  //           ribbon[i].insert(q);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   int max_sz = 0, over_count = 0;
   for (auto &sz : max_size) {
     if (sz > desired_size) over_count++;
     max_sz = std::max(max_sz, sz);
   }
-  //std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
+  std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
   // printf("max_size[0] = %d, locksize = %d\n", max_size[0], lock.size());
   // printf("max_size[1] = %d, locksize = %d\n", max_size[1], lock.size());
   return over_count;
@@ -548,12 +547,12 @@ std::string Patcher::export_json(std::unordered_set<MeshElementType> eles,
     out << "{";
     out << "\"order\" : " << int(ele) << ",\n";
     out << "\"num\" : " << mesh->num_elements[ele] << ",\n";
-    out << "\"max_num_per_patch\" : " << max_num_per_patch[ele] << ",\n";
-    dump("owned_offsets", owned_offsets[ele]); out << ",\n";
-    dump("total_offsets", total_offsets[ele]); out << ",\n";
-    dump("l2g_mapping", l2g_mapping[ele]); out << ",\n";
-    dump("g2r_mapping", g2r_mapping[ele]); out << ",\n";
-    dump("l2r_mapping", l2r_mapping[ele]); out << "\n";
+    out << "\"max_num_per_patch\" : " << max_num_per_patch[ele] << "\n";
+    // dump("owned_offsets", owned_offsets[ele]); out << ",\n";
+    // dump("total_offsets", total_offsets[ele]); out << ",\n";
+    // dump("l2g_mapping", l2g_mapping[ele]); out << ",\n";
+    // dump("g2r_mapping", g2r_mapping[ele]); out << ",\n";
+    // dump("l2r_mapping", l2r_mapping[ele]); out << "\n";
     out << "}\n";
   }
   out << "  ], \n";
@@ -566,19 +565,19 @@ std::string Patcher::export_json(std::unordered_set<MeshElementType> eles,
     comma_flag = true;
     out << "{";
     out << "\"from_order\" : " << from_end_element_order(rel) << ",\n";
-    out << "\"to_order\" : " << to_end_element_order(rel) << ",\n";
-    auto local_rel = local_rels.find(rel)->second;
-    if (!local_rel.fixed) {
-      dump("offset", local_rel.offset); out << ",\n";
-    }
-    dump("value", local_rel.value); out << "\n";
+    out << "\"to_order\" : " << to_end_element_order(rel) << "\n";
+    // auto local_rel = local_rels.find(rel)->second;
+    // if (!local_rel.fixed) {
+    //   dump("offset", local_rel.offset); out << ",\n";
+    // }
+    // dump("value", local_rel.value); out << "\n";
     out << "}\n";
   }
   out << "  ], \n";
 
-  out << "\"attrs\" : {\n";
+  out << "\"attrs\" : {}\n";
 
-  out << "  \"x\" : [ \n";
+  /*out << "  \"x\" : [ \n";
   comma_flag = false;
   for (const auto &vert : mesh->verts) {
     for (const auto &x : vert) {
@@ -587,7 +586,7 @@ std::string Patcher::export_json(std::unordered_set<MeshElementType> eles,
       out << x;
     }
   }
-  out << "  ]}\n";
+  out << "  ]}\n";*/
 
   out << "}";
   return out.str();
@@ -598,16 +597,24 @@ std::string Patcher::export_json() {
 }
 
 void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles, std::vector<MeshRelationType> rels) {
+  clock_t start_time, tmp_time, end_time;
+  start_time = clock();
   mesh = _mesh;
   if (mesh->topology == MeshTopology::Tetrahedron) {
     mesh->make_rel(MeshRelationType::CC);
   } else {
     mesh->make_rel(MeshRelationType::FF);
   }
+  end_time = clock();
+  std::cout << "Making FF relation Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+  start_time = clock();
   initialize(patch_size);
   main_relation = rels[0];
   generate(1 << 20, 1);
+  end_time = clock();
+  std::cout << "Iteration Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
   
+  start_time = clock();
   std::unordered_set<MeshElementType> _eles;
   std::unordered_set<MeshRelationType> _rels;
   for (auto ele : eles) _eles.insert(ele);
@@ -619,5 +626,7 @@ void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles
   build_patches(_eles, _rels);
   ex_eles = _eles;
   ex_rels = _rels;
+  end_time = clock();
+  std::cout << "Build Patches Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
 }
 }

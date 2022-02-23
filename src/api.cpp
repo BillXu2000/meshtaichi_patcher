@@ -40,7 +40,7 @@ std::vector<T> get_vector(int n) {
   return ans;
 }
 
-float Patcher::divide_threshold = 0;
+float Patcher::divide_threshold = 0.5;
 
 int main_ra(int argc, char* argv[]) {
   auto args = argparse(argc, argv);
