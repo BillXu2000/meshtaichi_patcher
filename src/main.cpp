@@ -80,7 +80,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
             auto mesh = Mesh::load_mesh(mesh_name);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = end - start;
-            std::cout << "Mesh Loading Time : " << diff.count() << "(s)\n";
+            //std::cout << "Mesh Loading Time : " << diff.count() << "(s)\n";
             static vector<shared_ptr<Mesh> > mesh_ptrs;
             mesh_ptrs.push_back(mesh);
             std::vector<RT> rt_arr;

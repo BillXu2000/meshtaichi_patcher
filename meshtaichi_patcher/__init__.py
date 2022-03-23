@@ -6,7 +6,7 @@ def mesh2meta(filename, relations):
     patcher = Patcher()
     start = time.time()
     patcher.run(filename, relations)
-    print('run time:', time.time() - start)
+    #print('run time:', time.time() - start)
     data = json.loads(patcher.export_json())
     element_arrs = ["l2g_mapping", "l2r_mapping", "g2r_mapping", "owned_offsets", "total_offsets"]
     for element in data["elements"]:
@@ -20,6 +20,6 @@ def mesh2meta(filename, relations):
             relation["offset"] = patcher.get_relation_arr("offset", from_order * 4 + to_order)
     data["attrs"]["x"] = patcher.get_mesh_x().reshape(-1)
     start = time.time()
-    meta = ti.Mesh.json2meta(data)
-    print('json2meta time:', time.time() - start)
+    meta = ti.Mesh.generate_meta(data)
+    #print('json2meta time:', time.time() - start)
     return meta

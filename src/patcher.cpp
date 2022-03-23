@@ -187,7 +187,7 @@ int Patcher::construct_patch() {
     if (sz > desired_size) over_count++;
     max_sz = std::max(max_sz, sz);
   }
-  std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
+  // std::cout << "num seed: " << num_seeds << " max size: " << max_sz << " over_count: " << over_count << std::endl;
   // printf("max_size[0] = %d, locksize = %d\n", max_size[0], lock.size());
   // printf("max_size[1] = %d, locksize = %d\n", max_size[1], lock.size());
   return over_count;
@@ -606,13 +606,13 @@ void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles
     mesh->make_rel(MeshRelationType::FF);
   }
   end_time = clock();
-  std::cout << "Making FF relation Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+  // std::cout << "Making FF relation Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
   start_time = clock();
   initialize(patch_size);
   main_relation = rels[0];
   generate(1 << 20, 1);
   end_time = clock();
-  std::cout << "Iteration Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+  //std::cout << "Iteration Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
   
   start_time = clock();
   std::unordered_set<MeshElementType> _eles;
@@ -627,6 +627,6 @@ void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles
   ex_eles = _eles;
   ex_rels = _rels;
   end_time = clock();
-  std::cout << "Build Patches Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
+  //std::cout << "Build Patches Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
 }
 }
