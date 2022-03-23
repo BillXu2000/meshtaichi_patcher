@@ -7,15 +7,19 @@ generated from pybind/cmake_example.
 * A compiler with C++11 support
 * Pip 10+ or CMake >= 3.4 (or 3.8+ on Windows, which was the first version to support VS 2015)
 * Ninja or Pip 10+
+* Taichi
 
 
 ## Installation
 
 ```bash
+git clone git@github.com:BillXu2000/meshtaichi_patcher.git
+cd meshtaichi_patcher
+git submodule update --init --recursive
 python3 setup.py develop --user
 ```
 
-## Test
+## example
 
 ```python
 import taichi as ti
