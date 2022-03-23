@@ -13,6 +13,7 @@ std::string element_type_name(MeshElementType type) {
     return "Cell";
   else {
     assert(0);
+    return "";
   }
 }
 
@@ -30,6 +31,7 @@ std::string conv_type_name(ConvType type) {
     return "global to reordered";
   } else {
     assert(0);
+    return "";
   }
 }
 
@@ -107,6 +109,14 @@ std::shared_ptr<Mesh> load_obj(std::string filename, bool shuffle) {
 
 
   char buf[256];
+  char objbuf[3][256];
+  auto s2i = [](char buf[]) {
+    int ans = 0;
+    for (int i = 0; '0' <= buf[i] && buf[i] <= '9'; i++) {
+      ans = ans * 10 + buf[i] - '0';
+    }
+    return ans;
+  };
   while (fgets(buf, 256, fp)) {
     if (buf[0] == '#' || buf[0] == '\n') {
       continue;
@@ -125,10 +135,11 @@ std::shared_ptr<Mesh> load_obj(std::string filename, bool shuffle) {
       // sscanf(buf + 2, "%d/%d/%d %d/%d/%d %d/%d/%d", &iv0, &_0, &_1, &iv1, &_2, &_3, &iv2, &_4, &_5);
       //sscanf(buf + 2, "%d/%d/%d %d/%d/%d %d/%d/%d", &iv0, &_0, &_1, &iv1, &_2, &_3, &iv2, &_4, &_5);
       // sscanf(buf + 2, "%d %d %d", &iv0, &iv1, &iv2);
-      sscanf(buf + 2, "%d//%d %d//%d %d//%d", &iv0, &_1, &iv1, &_3, &iv2, &_5);
-      int v0 = iv0 - 1;
-      int v1 = iv1 - 1;
-      int v2 = iv2 - 1;
+      //sscanf(buf + 2, "%d//%d %d//%d %d//%d", &iv0, &_1, &iv1, &_3, &iv2, &_5);
+      sscanf(buf + 2, "%s %s %s", objbuf[0], objbuf[1], objbuf[2]);
+      int v0 = s2i(objbuf[0]) - 1;
+      int v1 = s2i(objbuf[1]) - 1;
+      int v2 = s2i(objbuf[2]) - 1;
       if (shuffle) {
         v0 = perm[v0];
         v1 = perm[v1];
@@ -253,6 +264,15 @@ std::shared_ptr<Mesh> load_tet(std::string filename, bool shuffle) {
   mesh->num_elements.insert(std::make_pair(MeshElementType::Face, num_faces));
 
   return mesh;
+}
+
+std::shared_ptr<Mesh> Mesh::load_mesh(std::string filename) {
+  if (filename.substr(filename.size() - 3) == "obj") {
+    return load_obj(filename, false);
+  }
+  else {
+    return load_tet(filename, false);
+  }
 }
 
 }

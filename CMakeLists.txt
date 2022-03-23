@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.4...3.18)
-project(meshtaichi_patcher)
+project(meshtaichi_patcher_core)
 
 add_subdirectory(pybind11)
-pybind11_add_module(meshtaichi_patcher src/main.cpp src/api.cpp src/mesh.cpp src/patcher.cpp)
+pybind11_add_module(meshtaichi_patcher_core src/main.cpp src/api.cpp src/mesh.cpp src/patcher.cpp)
 
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
-target_compile_definitions(meshtaichi_patcher
+target_compile_definitions(meshtaichi_patcher_core
                            PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})

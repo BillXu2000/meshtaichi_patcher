@@ -26,6 +26,8 @@ class Patcher {
   std::set<int> lock;
   MeshRelationType main_relation;
 
+  Patcher() {}
+
   Patcher(std::shared_ptr<Mesh> mesh_) {
     mesh = mesh_.get();
     if (mesh->topology == MeshTopology::Tetrahedron) {
@@ -108,44 +110,18 @@ class Patcher {
   std::unordered_map<MeshElementType, int> max_num_per_patch;
   std::unordered_map<MeshRelationType, LocalRel> local_rels;
 
-  void export_json(std::string filename,
-                   std::unordered_set<MeshElementType> eles, 
+  std::unordered_set<MeshElementType> ex_eles; 
+  std::unordered_set<MeshRelationType> ex_rels;
+
+  std::string export_json(std::unordered_set<MeshElementType> eles, 
                    std::unordered_set<MeshRelationType> rels);
 
-  static Patcher run(std::shared_ptr<Mesh> mesh, 
+  std::string export_json();
+
+  void run(Mesh* _mesh, 
       int patch_size, 
       std::vector<MeshElementType> eles, 
-      std::vector<MeshRelationType> rels,
-      std::string filename) {
-    clock_t start_time, end_time;
-    Patcher patcher(mesh);
-    patcher.initialize(patch_size);
-    patcher.main_relation = rels[0];
-    start_time = clock();
-    patcher.generate(1 << 20, 1);
-    end_time = clock();
-    std::cout << "Patching Time : "
-            << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
-    
-    std::unordered_set<MeshElementType> _eles;
-    std::unordered_set<MeshRelationType> _rels;
-    for (auto ele : eles) _eles.insert(ele);
-    for (auto rel : rels) _rels.insert(rel);
-    for (const auto &rel : _rels) {
-      _eles.insert(MeshElementType(from_end_element_order(rel)));
-      _eles.insert(MeshElementType(to_end_element_order(rel)));
-    }
-    start_time = clock();
-    patcher.build_patches(_eles, _rels);
-    end_time = clock();
-    std::cout << "Build Patches Time : "
-            << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
-    
-    patcher.export_json(filename, _eles, _rels);
-    mesh->print();
-
-    return patcher;
-  }
+      std::vector<MeshRelationType> rels);
 };
 
 }

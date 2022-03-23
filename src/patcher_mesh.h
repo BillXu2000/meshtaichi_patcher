@@ -109,6 +109,8 @@ class Mesh {
     }
   }
 
+  static std::shared_ptr<Mesh> load_mesh(std::string filename); 
+
   private:
     GlobalRelation inverse(const GlobalRelation &rel, int size) const {
       GlobalRelation inv_rel(size);
@@ -148,5 +150,6 @@ class Mesh {
 
 std::shared_ptr<Mesh> load_obj(std::string filename, bool shuffle=false);
 std::shared_ptr<Mesh> load_tet(std::string filename, bool shuffle=false);
+
 
 }

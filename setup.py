@@ -126,7 +126,7 @@ setup(
     author_email="dean0x7d@gmail.com",
     description="A test project using pybind11 and CMake",
     long_description="",
-    ext_modules=[CMakeExtension("meshtaichi_patcher")],
+    ext_modules=[CMakeExtension("meshtaichi_patcher_core")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
