@@ -99,7 +99,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         })
         .def("get_element_arr", [](MeshTaichi::Patcher *patcher, std::string name, int order){
             using ET = MeshTaichi::MeshElementType;
-            using arr = std::unordered_map<ET, std::vector<int>>;
+            using arr = std::unordered_map<ET, std::vector<int>, MeshTaichi::MEHash>;
             std::map<std::string, arr*> ma;
             ma["owned_offsets"] = &(patcher->owned_offsets);
             ma["total_offsets"] = &(patcher->total_offsets);

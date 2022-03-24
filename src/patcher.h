@@ -98,8 +98,8 @@ class Patcher {
 
   std::vector<PatchInfo> patches_info;
 
-  void build_patches(std::unordered_set<MeshElementType> eles, 
-                     std::unordered_set<MeshRelationType> rels);
+  void build_patches(std::unordered_set<MeshElementType, MEHash> eles, 
+                     std::unordered_set<MeshRelationType, MRHash> rels);
 
   // flattened info
   std::unordered_map<MeshElementType, std::vector<int>, MEHash> owned_offsets;
@@ -110,11 +110,11 @@ class Patcher {
   std::unordered_map<MeshElementType, int, MEHash> max_num_per_patch;
   std::unordered_map<MeshRelationType, LocalRel, MRHash> local_rels;
 
-  std::unordered_set<MeshElementType> ex_eles; 
-  std::unordered_set<MeshRelationType> ex_rels;
+  std::unordered_set<MeshElementType, MEHash> ex_eles; 
+  std::unordered_set<MeshRelationType, MRHash> ex_rels;
 
-  std::string export_json(std::unordered_set<MeshElementType> eles, 
-                   std::unordered_set<MeshRelationType> rels);
+  std::string export_json(std::unordered_set<MeshElementType, MEHash> eles, 
+                   std::unordered_set<MeshRelationType, MRHash> rels);
 
   std::string export_json();
 
