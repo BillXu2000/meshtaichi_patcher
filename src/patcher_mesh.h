@@ -43,12 +43,28 @@ int to_end_element_order(MeshRelationType rel);
 MeshRelationType relation_by_orders(int from_order, int to_order);
 MeshRelationType inverse_relation(MeshRelationType rel);
 
+class MEHash {
+public:
+ std::size_t operator()(const MeshElementType& k) const
+ {
+   return int(k);
+ }
+};
+
+class MRHash {
+public:
+ std::size_t operator()(const MeshRelationType& k) const
+ {
+   return int(k);
+ }
+};
+
 class Mesh {
   public:
   using GlobalRelation = std::vector<std::vector<int>>;
   MeshTopology topology;
-  std::unordered_map<MeshElementType, int> num_elements;
-  std::unordered_map<MeshRelationType, GlobalRelation> global_rels;
+  std::unordered_map<MeshElementType, int, MEHash> num_elements;
+  std::unordered_map<MeshRelationType, GlobalRelation, MRHash> global_rels;
   std::vector<std::vector<float>> verts;
 
   GlobalRelation& alloca_rel(MeshRelationType rel_type) {

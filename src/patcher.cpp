@@ -279,8 +279,8 @@ void Patcher::add_seed() {
   }
 }
 
-void Patcher::build_patches(std::unordered_set<MeshElementType> eles, 
-                            std::unordered_set<MeshRelationType> rels) {
+void Patcher::build_patches(std::unordered_set<MeshElementType, MEHash> eles, 
+                            std::unordered_set<MeshRelationType, MRHash> rels) {
   patches_info.resize(num_seeds);
 
   for (int i = 0; i < 4; ++i) {
@@ -521,8 +521,8 @@ void Patcher::build_patches(std::unordered_set<MeshElementType> eles,
   patches_info.clear();
 }
 
-std::string Patcher::export_json(std::unordered_set<MeshElementType> eles, 
-                          std::unordered_set<MeshRelationType> rels) {
+std::string Patcher::export_json(std::unordered_set<MeshElementType, MEHash> eles, 
+                          std::unordered_set<MeshRelationType, MRHash> rels) {
   //std::fstream out(filename, std::ios::out);
   std::stringstream out;
   bool comma_flag = false;
@@ -615,8 +615,8 @@ void Patcher::run(Mesh *_mesh, int patch_size, std::vector<MeshElementType> eles
   //std::cout << "Iteration Time : " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << "(s)\n";
   
   start_time = clock();
-  std::unordered_set<MeshElementType> _eles;
-  std::unordered_set<MeshRelationType> _rels;
+  std::unordered_set<MeshElementType, MEHash> _eles;
+  std::unordered_set<MeshRelationType, MRHash> _rels;
   for (auto ele : eles) _eles.insert(ele);
   for (auto rel : rels) _rels.insert(rel);
   for (const auto &rel : _rels) {

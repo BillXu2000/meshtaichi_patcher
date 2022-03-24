@@ -23,12 +23,12 @@ python3 setup.py develop --user
 
 ```python
 import taichi as ti
-import meshtaichi_patcher as patcher
+import meshtaichi_patcher as patcher # this repo
 
 ti.init()
 mesh = ti.TetMesh()
-mesh.edges.link(mesh.verts)
-meta = patcher.mesh2meta("./bunny0.obj", ["ev"])
+mesh.edges.link(mesh.verts) # allow edges to visit their connected vertices
+meta = patcher.mesh2meta("./bunny0.obj", ["ev"]) # ev stands for "edges.link(verts)"
 bunny = mesh.build(meta)
 
 @ti.kernel
