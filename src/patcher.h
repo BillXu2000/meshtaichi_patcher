@@ -69,8 +69,8 @@ class Patcher {
   }
 
   // Construct Patches
-  std::unordered_map<MeshElementType, std::vector<int>> element_owner;
-  std::unordered_map<MeshElementType, std::vector<int>> g2l;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> element_owner;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> g2l;
 
   // Patch info
   // Relation info are from Tetmesh/Trimesh, but we should localize index
@@ -90,10 +90,10 @@ class Patcher {
   };
 
   struct PatchInfo {
-    std::unordered_map<MeshElementType, int> total_elements;
-    std::unordered_map<MeshElementType, int> owned_elements;
-    std::unordered_map<MeshElementType, std::vector<int>> l2g;
-    mutable std::unordered_map<MeshElementType, std::map<int, int>> ribbon_g2l;
+    std::unordered_map<MeshElementType, int, MEHash> total_elements;
+    std::unordered_map<MeshElementType, int, MEHash> owned_elements;
+    std::unordered_map<MeshElementType, std::vector<int>, MEHash> l2g;
+    mutable std::unordered_map<MeshElementType, std::map<int, int>, MEHash> ribbon_g2l;
   };
 
   std::vector<PatchInfo> patches_info;
@@ -102,13 +102,13 @@ class Patcher {
                      std::unordered_set<MeshRelationType> rels);
 
   // flattened info
-  std::unordered_map<MeshElementType, std::vector<int>> owned_offsets;
-  std::unordered_map<MeshElementType, std::vector<int>> total_offsets;
-  std::unordered_map<MeshElementType, std::vector<int>> l2g_mapping;
-  std::unordered_map<MeshElementType, std::vector<int>> l2r_mapping;
-  std::unordered_map<MeshElementType, std::vector<int>> g2r_mapping;
-  std::unordered_map<MeshElementType, int> max_num_per_patch;
-  std::unordered_map<MeshRelationType, LocalRel> local_rels;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> owned_offsets;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> total_offsets;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> l2g_mapping;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> l2r_mapping;
+  std::unordered_map<MeshElementType, std::vector<int>, MEHash> g2r_mapping;
+  std::unordered_map<MeshElementType, int, MEHash> max_num_per_patch;
+  std::unordered_map<MeshRelationType, LocalRel, MRHash> local_rels;
 
   std::unordered_set<MeshElementType> ex_eles; 
   std::unordered_set<MeshRelationType> ex_rels;
