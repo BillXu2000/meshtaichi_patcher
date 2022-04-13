@@ -117,7 +117,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         })
         .def("get_mesh_x", [](MeshTaichi::Patcher *patcher){
             //return py::to_pyarray(patcher->mesh->verts);
-            std::vector<int> ans;
+            std::vector<float> ans;
             for (auto x: patcher->mesh->verts) {
                 for (auto y: x) {
                     ans.push_back(y);
