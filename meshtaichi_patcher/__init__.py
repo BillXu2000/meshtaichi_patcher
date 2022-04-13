@@ -33,5 +33,6 @@ def meta_test(filename, relations):
     m = mesh.Mesh(ml_m)
     c = cluster.Cluster(m.get_relation(2, 2), 1024)
     c.run()
-    print([(i[:10], len(i)) for i in c.patch])
-    print(sum([len(i) for i in c.patch]))
+    #print([(i[:10], len(i)) for i in c.patch])
+    #print(sum([len(i) for i in c.patch]))
+    m.patch(c)

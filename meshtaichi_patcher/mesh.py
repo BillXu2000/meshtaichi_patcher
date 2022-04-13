@@ -10,6 +10,9 @@ class Mesh:
             self.relation[(1, 0)] = Relation(1, 0, mesh.edge_matrix())
         self.generate_elements()
     
+    def get_size(self, order):
+        return len(self.relation[(order, 0)].matrix) if order > 0 else len(self.position)
+    
     def get_subsets(s):
         if len(s) == 0:
             return [[]]
@@ -61,3 +64,36 @@ class Mesh:
                 relation[i].append(j)
         self.relation[(from_end, to_end)] = Relation(from_end, to_end, np.array(relation))
         return self.relation[(from_end, to_end)]
+    
+    def patch(self, cluster):
+        self.owned = []
+        for order in range(self.n_order - 1):
+            color = np.zeros([self.get_size(order)], dtype=np.int32)
+            relation = self.get_relation(self.n_order - 1, order)
+            for u in range(self.get_size(self.n_order - 1)):
+                for v in relation[u]:
+                    color[v] = cluster.color[u]
+            self.owned.append([[] for i in cluster.patch])
+            owned = self.owned[-1]
+            for v, c in enumerate(color):
+                owned[c].append(v)
+            print(order, [len(i) for i in owned])
+        owned = None
+        self.owned.append(cluster.patch)
+        self.total = []
+        for order in range(self.n_order):
+            total = []
+            for c, p in enumerate(cluster.patch):
+                s = set(self.owned[order][c])
+                rel_0 = self.get_relation(self.n_order - 1, 0)
+                rel_1 = self.get_relation(0, order)
+                l = []
+                for u in p:
+                    for v in rel_0[u]:
+                        for w in rel_1[v]:
+                            if w not in s:
+                                s.add(w)
+                                l.append(w)
+                total.append(self.owned[order][c] + l)
+            self.total.append(total)
+            print(order, [len(i) for i in total])
