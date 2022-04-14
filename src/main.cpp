@@ -113,6 +113,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
             using RT = MeshTaichi::MeshRelationType;
             auto local_rel = patcher->local_rels.find(RT(order))->second;
             if (name == "value") return vector2np(local_rel.value);
+            if (name == "patch_offset") return vector2np(local_rel.patch_offset);
             if (name == "offset") return vector2np(local_rel.offset);
         })
         .def("get_mesh_x", [](MeshTaichi::Patcher *patcher){

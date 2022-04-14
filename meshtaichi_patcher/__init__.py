@@ -19,6 +19,7 @@ def mesh2meta(filename, relations):
         to_order = relation["to_order"]
         relation["value"] = patcher.get_relation_arr("value", from_order * 4 + to_order)
         if from_order <= to_order:
+            relation["patch_offset"] = patcher.get_relation_arr("patch_offset", from_order * 4 + to_order)
             relation["offset"] = patcher.get_relation_arr("offset", from_order * 4 + to_order)
     data["attrs"]["x"] = patcher.get_mesh_x().reshape(-1)
     start = time.time()

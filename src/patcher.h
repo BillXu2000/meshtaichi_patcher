@@ -75,8 +75,10 @@ class Patcher {
   // Patch info
   // Relation info are from Tetmesh/Trimesh, but we should localize index
   struct LocalRel {
-    LocalRel(std::vector<int> && value_, std::vector<int> &&offset_)
-        : value(value_), offset(offset_) {
+    LocalRel(std::vector<int> && value_, 
+             std::vector<int> && patch_offset_, 
+             std::vector<int> && offset_)
+        : value(value_), patch_offset(patch_offset_), offset(offset_) {
       fixed = false;
     }
 
@@ -86,6 +88,7 @@ class Patcher {
 
     bool fixed;
     std::vector<int> value;
+    std::vector<int> patch_offset;
     std::vector<int> offset;
   };
 
