@@ -66,6 +66,7 @@ class Mesh:
         return self.relation[(from_end, to_end)]
     
     def patch(self, cluster):
+        self.cluster = cluster
         self.owned = []
         for order in range(self.n_order - 1):
             color = np.zeros([self.get_size(order)], dtype=np.int32)
@@ -77,7 +78,6 @@ class Mesh:
             owned = self.owned[-1]
             for v, c in enumerate(color):
                 owned[c].append(v)
-            print(order, [len(i) for i in owned])
         owned = None
         self.owned.append(cluster.patch)
         self.total = []
@@ -96,4 +96,63 @@ class Mesh:
                                 l.append(w)
                 total.append(self.owned[order][c] + l)
             self.total.append(total)
-            print(order, [len(i) for i in total])
+    
+    def pack(arr):
+        offset = [0] + [len(i) for i in arr]
+        for i in range(len(arr)):
+            offset[i + 1] += offset[i]
+        return np.array(offset).astype(np.int32), np.array(sum(arr, start=[])).astype(np.int32)
+    
+    def get_element_meta(self, order):
+        ans = {}
+        ans["order"] = order
+        ans["num"] = self.get_size(order)
+        ans["max_num_per_patch"] = max([len(i) for i in self.total[order]])
+        ans["owned_offsets"], tmp = Mesh.pack(self.owned[order])
+        ans["total_offsets"], ans["l2g_mapping"] = Mesh.pack(self.total[order])
+        g2r = [0] * self.get_size(order)
+        for i, k in enumerate(tmp):
+            g2r[k] = i
+        ans["g2r_mapping"] = np.array(g2r)
+        l2r = []
+        for k in ans["l2g_mapping"]:
+            l2r.append(g2r[k])
+        ans["l2r_mapping"] = np.array(l2r)
+        return ans
+    
+    def get_relation_meta(self, from_end, to_end):
+        ans = {}
+        ans["from_order"] = from_end
+        ans["to_order"] = to_end
+        total_from = self.total[from_end]
+        total_to = self.total[to_end]
+        matrix = []
+        relation = self.get_relation(from_end, to_end)
+        for i in range(len(total_from)):
+            d = {}
+            for j, u in enumerate(total_to[i]):
+                d[u] = j
+            for u in total_from[i]:
+                l = []
+                for v in relation[u]:
+                    l.append(d[v] if v in d else 0)
+                matrix.append(l)
+        ans["offset"], ans["value"] = Mesh.pack(matrix)
+        return ans
+    
+    def get_meta(self, relations):
+        c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
+        ans = {}
+        ans["num_patches"] = len(self.cluster.patch)
+        ans["elements"] = []
+        for order in range(self.n_order):
+            ans["elements"].append(self.get_element_meta(order))
+        ans["relations"] = []
+        for relation in relations:
+            if isinstance(relation, str):
+                relation = (c2i[relation[0]], c2i[relation[1]])
+            ans["relations"].append(self.get_relation_meta(*relation))
+        ans["attrs"] = {'x': self.position.reshape(-1).astype(np.float32)}
+        return ans
+
+            

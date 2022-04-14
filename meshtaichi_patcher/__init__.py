@@ -1,7 +1,7 @@
 from meshtaichi_patcher_core import *
 import json, time, numpy as np
 import taichi as ti
-import pymeshlab
+import pymeshlab, pprint
 from . import cluster, relation, mesh
 
 def mesh2meta(filename, relations):
@@ -22,8 +22,8 @@ def mesh2meta(filename, relations):
             relation["offset"] = patcher.get_relation_arr("offset", from_order * 4 + to_order)
     data["attrs"]["x"] = patcher.get_mesh_x().reshape(-1)
     start = time.time()
+    pp = pprint.PrettyPrinter(indent=4)
     meta = ti.Mesh.generate_meta(data)
-    #print('json2meta time:', time.time() - start)
     return meta
 
 def meta_test(filename, relations):
@@ -31,8 +31,9 @@ def meta_test(filename, relations):
     ml_ms.load_new_mesh(filename)
     ml_m = ml_ms.current_mesh()
     m = mesh.Mesh(ml_m)
-    c = cluster.Cluster(m.get_relation(2, 2), 1024)
+    c = cluster.Cluster(m.get_relation(2, 2), 256)
     c.run()
-    #print([(i[:10], len(i)) for i in c.patch])
-    #print(sum([len(i) for i in c.patch]))
     m.patch(c)
+    meta = m.get_meta(relations)
+    meta = ti.Mesh.generate_meta(meta)
+    return meta

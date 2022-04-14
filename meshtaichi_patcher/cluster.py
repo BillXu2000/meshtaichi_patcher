@@ -51,10 +51,10 @@ class Cluster:
         rel = self.relation
         keys = rel.keys()
         random.shuffle(rel.keys())
-        seeds = keys[:len(keys) // self.patch_size]
+        seeds = keys[:max(1, len(keys) // self.patch_size)]
         while True:
             self.coloring(seeds)
-            if max([len(p) for p in self.patch]) < self.patch_size:
+            if max([len(p) for p in self.patch]) <= self.patch_size:
                 break
             seeds = self.update_seed()
 
