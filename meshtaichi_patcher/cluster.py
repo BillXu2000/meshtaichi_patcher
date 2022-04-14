@@ -6,7 +6,7 @@ class Cluster:
     def __init__(self, relation, patch_size):
         self.relation = relation
         self.patch_size = patch_size
-        self.color = np.zeros([len(relation.keys())], dtype=np.int32)
+        self.color = np.zeros([len(relation)], dtype=np.int32)
         self.visit = np.zeros([len(self.color)], dtype=np.int32)
         random.seed(0)
 
@@ -49,9 +49,9 @@ class Cluster:
     
     def run(self):
         rel = self.relation
-        keys = rel.keys()
-        random.shuffle(rel.keys())
-        seeds = keys[:max(1, len(keys) // self.patch_size)]
+        keys = list(rel.keys())
+        random.shuffle(keys)
+        seeds = keys[:max(1, len(rel) // self.patch_size)]
         while True:
             self.coloring(seeds)
             if max([len(p) for p in self.patch]) <= self.patch_size:

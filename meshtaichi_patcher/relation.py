@@ -1,19 +1,25 @@
 import numpy as np
 
 class Relation:
-    def __init__(self, from_end, to_end, matrix):
-        self.from_end = from_end
-        self.to_end = to_end
-        lens = [len(i) for i in matrix]
-        if (max(lens) == min(lens)):
-            matrix = np.array(matrix)
-        self.matrix = matrix
+    def __init__(self, matrix):
+        offset = [0] + [len(i) for i in matrix]
+        for i in range(len(matrix)):
+            offset[i + 1] += offset[i]
+        self.offset = np.array(offset)
+        value = []
+        for i in matrix:
+            for j in i:
+                value.append(j)
+        self.value = np.array(value)
     
     def keys(self):
-        return list(range(len(self.matrix)))
+        return range(len(self.offset) - 1)
+    
+    def __len__(self):
+        return len(self.offset) - 1
 
     def __getitem__(self, key):
-        return self.matrix[key]
+        return self.value[self.offset[key]: self.offset[key + 1]]
 
     def transpose(self):
         m_t = []
@@ -22,7 +28,7 @@ class Relation:
                 while len(m_t) <= v:
                     m_t.append([])
                 m_t[v].append(u)
-        return Relation(self.to_end, self.from_end, m_t)
+        return Relation(m_t)
 
     def mul(self, relation):
         matrix = []
@@ -32,7 +38,7 @@ class Relation:
                     while len(matrix) <= u:
                         matrix.append([])
                     matrix[u].append(w)
-        return Relation(self.from_end, relation.to_end, matrix)
+        return Relation(matrix)
                     
     def remove_self_loop(self):
         matrix = []
@@ -42,4 +48,4 @@ class Relation:
                 if u != v:
                     l.append(v)
             matrix.append(l)
-        return Relation(self.from_end, self.to_end, matrix)
+        return Relation(matrix)

@@ -5,13 +5,13 @@ class Mesh:
     def __init__(self, mesh):
         self.position = mesh.vertex_matrix()
         self.n_order = 3
-        self.relation = {(2, 0): Relation(2, 0, mesh.face_matrix())}
+        self.relation = {(2, 0): Relation(mesh.face_matrix())}
         if len(mesh.edge_matrix()):
-            self.relation[(1, 0)] = Relation(1, 0, mesh.edge_matrix())
+            self.relation[(1, 0)] = Relation(mesh.edge_matrix())
         self.generate_elements()
     
     def get_size(self, order):
-        return len(self.relation[(order, 0)].matrix) if order > 0 else len(self.position)
+        return len(self.relation[(order, 0)]) if order > 0 else len(self.position)
     
     def get_subsets(s):
         if len(s) == 0:
@@ -35,7 +35,7 @@ class Mesh:
                         continue
                     ele_set.add(v)
                     relation.append(v)
-            self.relation[(order, 0)] = Relation(order, 0, np.array(relation))
+            self.relation[(order, 0)] = Relation(np.array(relation))
 
     def get_relation(self, from_end, to_end):
         if (from_end, to_end) in self.relation:
@@ -62,7 +62,7 @@ class Mesh:
                     continue
                 j = ele_dict[v]
                 relation[i].append(j)
-        self.relation[(from_end, to_end)] = Relation(from_end, to_end, np.array(relation))
+        self.relation[(from_end, to_end)] = Relation(np.array(relation))
         return self.relation[(from_end, to_end)]
     
     def patch(self, cluster):
@@ -74,12 +74,12 @@ class Mesh:
             for u in range(self.get_size(self.n_order - 1)):
                 for v in relation[u]:
                     color[v] = cluster.color[u]
-            self.owned.append([[] for i in cluster.patch])
-            owned = self.owned[-1]
+            owned = [[] for i in cluster.patch]
             for v, c in enumerate(color):
                 owned[c].append(v)
+            self.owned.append(Relation(owned))
         owned = None
-        self.owned.append(cluster.patch)
+        self.owned.append(Relation(cluster.patch))
         self.total = []
         for order in range(self.n_order):
             total = []
@@ -94,22 +94,16 @@ class Mesh:
                             if w not in s:
                                 s.add(w)
                                 l.append(w)
-                total.append(self.owned[order][c] + l)
-            self.total.append(total)
-    
-    def pack(arr):
-        offset = [0] + [len(i) for i in arr]
-        for i in range(len(arr)):
-            offset[i + 1] += offset[i]
-        return np.array(offset).astype(np.int32), np.array(sum(arr, start=[])).astype(np.int32)
+                total.append(list(self.owned[order][c]) + l)
+            self.total.append(Relation(total))
     
     def get_element_meta(self, order):
         ans = {}
         ans["order"] = order
         ans["num"] = self.get_size(order)
         ans["max_num_per_patch"] = max([len(i) for i in self.total[order]])
-        ans["owned_offsets"], tmp = Mesh.pack(self.owned[order])
-        ans["total_offsets"], ans["l2g_mapping"] = Mesh.pack(self.total[order])
+        ans["owned_offsets"], tmp = self.owned[order].offset, self.owned[order].value
+        ans["total_offsets"], ans["l2g_mapping"] = self.total[order].offset, self.total[order].value
         g2r = [0] * self.get_size(order)
         for i, k in enumerate(tmp):
             g2r[k] = i
@@ -137,7 +131,8 @@ class Mesh:
                 for v in relation[u]:
                     l.append(d[v] if v in d else 0)
                 matrix.append(l)
-        ans["offset"], ans["value"] = Mesh.pack(matrix)
+        rel = Relation(matrix)
+        ans["offset"], ans["value"] = rel.offset, rel.value
         return ans
     
     def get_meta(self, relations):

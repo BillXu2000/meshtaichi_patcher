@@ -30,10 +30,19 @@ def meta_test(filename, relations):
     ml_ms = pymeshlab.MeshSet()
     ml_ms.load_new_mesh(filename)
     ml_m = ml_ms.current_mesh()
+
+    start = time.time()
     m = mesh.Mesh(ml_m)
+    print('mesh time', time.time() - start)
+
+    start = time.time()
     c = cluster.Cluster(m.get_relation(2, 2), 256)
     c.run()
+    print('cluster time', time.time() - start)
+
+    start = time.time()
     m.patch(c)
     meta = m.get_meta(relations)
+    print('patch time', time.time() - start)
     meta = ti.Mesh.generate_meta(meta)
     return meta
