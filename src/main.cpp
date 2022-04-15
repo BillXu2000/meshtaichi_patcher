@@ -4,6 +4,8 @@
 #include <vector>
 #include <chrono>
 #include "patcher_api.h"
+#include "csr.h"
+#include "cluster.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -127,4 +129,41 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
             return vector2np(ans);
         })
         ;
+    
+
+    m.def("add_index_test", [](py::array_t<int> x) {
+        auto arr = x.mutable_unchecked<1>();
+        for (py::ssize_t i = 0; i < arr.shape(0); i++) {
+            arr(i) += i;
+            printf("%d ", arr(i));
+        }
+        puts("");
+    }, py::arg().noconvert());
+
+    // m.def("get_csr", [](py::array_t<int> offset, py::array_t<int> value) {
+    //     return Csr(offset, value);
+    // }, py::arg().noconvert());
+
+    py::class_<Csr>(m, "Csr_cpp")
+        .def(py::init<py::array_t<int> &, py::array_t<int> &>())
+        .def_readwrite("offset", &Csr::offset)
+        .def_readwrite("value", &Csr::value)
+        .def("transpose", &Csr::transpose)
+        .def("mul", &Csr::mul)
+        .def("remove_self_loop", &Csr::remove_self_loop)
+        ;
+
+    m.def("get_np_test", [](int n) {
+        std::vector<int> a(n);
+        for (int i = 0; i < n; i++) {
+            a[i] = i;
+        }
+        return py::array_t<int>(a.size(), a.data());
+    });
+
+    py::class_<Cluster>(m, "Cluster_cpp")
+        .def(py::init<>())
+        .def("run", &Cluster::run)
+        ;
+
 }

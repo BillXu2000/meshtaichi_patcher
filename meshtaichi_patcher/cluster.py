@@ -1,3 +1,4 @@
+from meshtaichi_patcher_core import Cluster_cpp
 from . import relation
 import random
 import numpy as np
@@ -48,13 +49,13 @@ class Cluster:
         return list(new_seeds)
     
     def run(self):
-        rel = self.relation
-        keys = list(rel.keys())
-        random.shuffle(keys)
-        seeds = keys[:max(1, len(rel) // self.patch_size)]
-        while True:
-            self.coloring(seeds)
-            if max([len(p) for p in self.patch]) <= self.patch_size:
-                break
-            seeds = self.update_seed()
-
+        cluster = Cluster_cpp()
+        ans = relation.Relation(cluster.run(self.relation.csr))
+        color = [0] * len(self.relation)
+        patch = []
+        for i in ans.keys():
+            patch.append(ans[i])
+            for j in ans[i]:
+                color[j] = i
+        self.color = color
+        self.patch = patch

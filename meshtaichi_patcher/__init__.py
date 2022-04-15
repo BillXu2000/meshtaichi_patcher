@@ -50,3 +50,7 @@ def meta_test(filename, relations):
     # pp.pprint(meta)
     meta = ti.Mesh.generate_meta(meta)
     return meta
+
+def test_pybind():
+    arr = get_np_test(int(1e6))
+    print(arr.shape, arr.sum(), arr)

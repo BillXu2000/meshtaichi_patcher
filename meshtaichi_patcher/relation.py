@@ -1,16 +1,25 @@
+from meshtaichi_patcher_core import Csr_cpp
 import numpy as np
 
 class Relation:
     def __init__(self, matrix):
-        offset = [0] + [len(i) for i in matrix]
-        for i in range(len(matrix)):
-            offset[i + 1] += offset[i]
-        self.offset = np.array(offset)
-        value = []
-        for i in matrix:
-            for j in i:
-                value.append(j)
-        self.value = np.array(value)
+        if isinstance(matrix, Csr_cpp):
+            csr = matrix
+            self.csr = csr
+            self.offset = csr.offset
+            self.value = csr.value
+            # print(self.offset, self.value)
+        else:
+            offset = [0] + [len(i) for i in matrix]
+            for i in range(len(matrix)):
+                offset[i + 1] += offset[i]
+            self.offset = np.array(offset)
+            value = []
+            for i in matrix:
+                for j in i:
+                    value.append(j)
+            self.value = np.array(value)
+            self.csr = Csr_cpp(self.offset, self.value)
     
     def keys(self):
         return range(len(self.offset) - 1)
@@ -22,30 +31,10 @@ class Relation:
         return self.value[self.offset[key]: self.offset[key + 1]]
 
     def transpose(self):
-        m_t = []
-        for u in self.keys():
-            for v in self[u]:
-                while len(m_t) <= v:
-                    m_t.append([])
-                m_t[v].append(u)
-        return Relation(m_t)
+        return Relation(self.csr.transpose())
 
     def mul(self, relation):
-        matrix = []
-        for u in self.keys():
-            for v in self[u]:
-                for w in relation[v]:
-                    while len(matrix) <= u:
-                        matrix.append([])
-                    matrix[u].append(w)
-        return Relation(matrix)
+        return Relation(self.csr.mul(relation.csr))
                     
     def remove_self_loop(self):
-        matrix = []
-        for u in self.keys():
-            l = []
-            for v in self[u]:
-                if u != v:
-                    l.append(v)
-            matrix.append(l)
-        return Relation(matrix)
+        return Relation(self.csr.remove_self_loop())
