@@ -9,3 +9,4 @@ _generate/
 *.obj
 
 example/bunny
+**/imgui.ini
