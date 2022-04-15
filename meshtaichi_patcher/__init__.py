@@ -24,6 +24,7 @@ def mesh2meta(filename, relations):
     data["attrs"]["x"] = patcher.get_mesh_x().reshape(-1)
     start = time.time()
     pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(data)
     meta = ti.Mesh.generate_meta(data)
     return meta
 
@@ -37,7 +38,7 @@ def meta_test(filename, relations):
     print('mesh time', time.time() - start)
 
     start = time.time()
-    c = cluster.Cluster(m.get_relation(2, 2), 256)
+    c = cluster.Cluster(m.get_relation(2, 2), 1024)
     c.run()
     print('cluster time', time.time() - start)
 
@@ -45,5 +46,7 @@ def meta_test(filename, relations):
     m.patch(c)
     meta = m.get_meta(relations)
     print('patch time', time.time() - start)
+    pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(meta)
     meta = ti.Mesh.generate_meta(meta)
     return meta

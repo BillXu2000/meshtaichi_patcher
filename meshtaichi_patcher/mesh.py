@@ -118,21 +118,28 @@ class Mesh:
         ans = {}
         ans["from_order"] = from_end
         ans["to_order"] = to_end
-        total_from = self.total[from_end]
+        total_from = self.total[from_end] if from_end > to_end else self.owned[from_end]
         total_to = self.total[to_end]
-        matrix = []
         relation = self.get_relation(from_end, to_end)
+        offset = []
+        value = []
+        patch_off = [0]
         for i in range(len(total_from)):
             d = {}
             for j, u in enumerate(total_to[i]):
                 d[u] = j
+            matrix = []
             for u in total_from[i]:
                 l = []
                 for v in relation[u]:
                     l.append(d[v] if v in d else 0)
                 matrix.append(l)
-        rel = Relation(matrix)
-        ans["offset"], ans["value"] = rel.offset, rel.value
+            rel = Relation(matrix)
+            offset = offset + list(rel.offset)
+            value = value + list(rel.value)
+            patch_off.append(patch_off[-1] + rel.offset[-1])
+        ans["offset"], ans["value"] = np.array(offset), np.array(value)
+        ans["patch_offset"] = np.array(patch_off[:-1])
         return ans
     
     def get_meta(self, relations):
