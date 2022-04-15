@@ -33,6 +33,10 @@ int Csr::Range::size() {
     return e - b;
 }
 
+int Csr::Range::operator [] (int i) {
+    return b[i];
+}
+
 Csr::Range Csr::operator [] (int i) {
     return Range(value.mutable_data(0) + *offset.data(i), value.mutable_data(0) + *offset.data(i + 1));
 }
@@ -80,4 +84,13 @@ Csr Csr::remove_self_loop() {
         off_new.push_back(val_new.size());
     }
     return Csr(off_new, val_new);
+}
+
+void Csr::print() {
+    for (int u = 0; u < size(); u++) {
+        for (auto v: (*this)[u]) {
+            printf("(%d, %d) ", u, v);
+        }
+        printf("\n");
+    }
 }

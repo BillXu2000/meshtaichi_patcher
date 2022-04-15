@@ -2,7 +2,7 @@ import taichi as ti, sys, os, argparse, subprocess, re, numpy as np, time
 import meshtaichi_patcher as patcher
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mesh', default='./bunny/bunny0.obj')
+parser.add_argument('--mesh', default='./bunny/bunny5.obj')
 parser.add_argument('--save_obj', action='store_true')
 parser.add_argument('--num_run', type=int, default=20000000)
 parser.add_argument('--exp', default='ev')

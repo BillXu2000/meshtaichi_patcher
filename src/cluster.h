@@ -1,3 +1,4 @@
+#pragma once
 #include "csr.h"
 
 struct Cluster {

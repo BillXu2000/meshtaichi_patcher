@@ -1,8 +1,8 @@
 import taichi as ti
 import meshtaichi_patcher as patcher
 
-obj_name = "./bunny/bunny0.obj"
-# obj_name = "test.obj"
+# obj_name = "./bunny/bunny0.obj"
+obj_name = "test.obj"
 # relations = ['ev', 'vv', 'ee']
 relations = ['ev', 'vv']
 # relations = ['vv']

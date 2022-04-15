@@ -6,6 +6,7 @@
 #include "patcher_api.h"
 #include "csr.h"
 #include "cluster.h"
+#include "patcher.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -164,6 +165,17 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
     py::class_<Cluster>(m, "Cluster_cpp")
         .def(py::init<>())
         .def("run", &Cluster::run)
+        ;
+
+    py::class_<Patcher>(m, "Patcher_cpp")
+        .def(py::init<>())
+        .def_readwrite("n_order", &Patcher::n_order)
+        .def("set_relation", &Patcher::set_relation)
+        .def("patch", &Patcher::patch)
+        .def("get_owned", &Patcher::get_owned)
+        .def("get_total", &Patcher::get_total)
+        .def("get_relation_meta", &Patcher::get_relation_meta)
+        .def("get_patch_offset", &Patcher::get_patch_offset)
         ;
 
 }

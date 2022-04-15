@@ -3,7 +3,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <vector>
-#include <chrono>
 
 namespace py = pybind11;
 
@@ -17,12 +16,16 @@ struct Csr {
 
     Csr(std::vector<std::array<int, 2>> pairs);
 
+    Csr() {}
+
+
     struct Range {
         int *b, *e;
         Range(int* _b, int* _e);
         int* begin();
         int* end();
         int size();
+        int operator [](int i);
     };
 
     Range operator[] (int i);
@@ -31,4 +34,5 @@ struct Csr {
     Csr transpose();
     Csr mul(Csr&);
     Csr remove_self_loop();
+    void print();
 };

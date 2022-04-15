@@ -8,7 +8,6 @@ class Relation:
             self.csr = csr
             self.offset = csr.offset
             self.value = csr.value
-            # print(self.offset, self.value)
         else:
             offset = [0] + [len(i) for i in matrix]
             for i in range(len(matrix)):
@@ -38,3 +37,6 @@ class Relation:
                     
     def remove_self_loop(self):
         return Relation(self.csr.remove_self_loop())
+    
+    def print(self):
+        print(self.offset, self.value)

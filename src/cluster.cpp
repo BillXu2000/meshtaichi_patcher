@@ -44,7 +44,7 @@ Csr Cluster::run(Csr &graph) {
         for (int u = 0; u < patch.size(); u++) {
             ma = max(ma, patch[u].size());
         }
-        if (ma < patch_size) return patch;
+        if (ma <= patch_size) return patch;
 
         // update seeds
         std::vector<bool> visit(n);
@@ -63,11 +63,11 @@ Csr Cluster::run(Csr &graph) {
             int last;
             while (!q.empty()) {
                 int u = q.front();
+                last = u;
                 q.pop();
                 for (auto v : graph[u]) {
                     if (color[v] == p && !visit[v]) {
                         visit[v] = true;
-                        last = v;
                         q.push(v);
                     }
                 }
