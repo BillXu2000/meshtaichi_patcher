@@ -12,6 +12,7 @@ struct Patcher {
     int get_size(int order);
     void set_relation(int from_end, int to_end, Csr &rel);
     Csr &get_relation(int from_end, int to_end);
+    void generate_elements();
     void patch(Csr &patch);
     Csr &get_owned(int order);
     Csr &get_total(int order);

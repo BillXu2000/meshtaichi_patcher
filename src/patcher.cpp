@@ -1,7 +1,7 @@
 #include "patcher.h"
 
 int Patcher::get_size(int order) {
-    return relation[{order, 0}].size();
+    return order ? relation[{order, 0}].size() : relation[{0, n_order - 1}].size();
 }
 
 void Patcher::set_relation(int from_end, int to_end, Csr &rel) {
@@ -17,7 +17,7 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
         return relation[key];
     }
     if (key[0] < key[1]) {
-        relation[key] = get_relation(key[1], key[0]);
+        relation[key] = get_relation(key[1], key[0]).transpose();
         return relation[key];
     }
     if (key[0] == key[1] && key[0] == 0) {
@@ -40,12 +40,13 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
     offset.push_back(0);
     for (int u = 0; u < from.size(); u++) {
         vector<int> subset, k(from[u].begin(), from[u].end());
+        sort(k.begin(), k.end());
         function<void(int)> fun = [&](int i) {
             if (subset.size() == to_end + 1) {
                 value.push_back(ele_dict[subset]);
                 return;
             }
-            if (i > from_end) return;
+            if (i >= k.size()) return;
             fun(i + 1);
             subset.push_back(k[i]);
             fun(i + 1);
@@ -58,11 +59,44 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
     return relation[key];
 }
 
+void Patcher::generate_elements() {
+    using namespace std;
+    get_relation(0, n_order - 1);
+    for (int order = 1; order < n_order; order++) {
+        if (relation.find({order, 0}) != relation.end()) {
+            continue;
+        }
+        auto &rel = relation[{n_order - 1, 0}];
+        vector<int> offset, value;
+        set<vector<int> > s;
+        offset.push_back(0);
+        for (int u = 0; u < rel.size(); u++) {
+            vector<int> subset, k(rel[u].begin(), rel[u].end());
+            sort(k.begin(), k.end());
+            function<void(int)> fun = [&](int i) {
+                if (subset.size() == order + 1 && s.find(subset) == s.end()) {
+                    value.insert(value.end(), subset.begin(), subset.end());
+                    offset.push_back(value.size());
+                    s.insert(subset);
+                    return;
+                }
+                if (i >= k.size()) return;
+                fun(i + 1);
+                subset.push_back(k[i]);
+                fun(i + 1);
+                subset.erase(subset.end() - 1);
+            };
+            fun(0);
+        }
+        relation[{order, 0}] = Csr(offset, value);
+    }
+}
+
 void Patcher::patch(Csr &patch) {
     using namespace std;
     for (int order = 0; order < n_order - 1; order++) {
+        auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
-        auto &rel = relation[{n_order - 1, order}];
         for (int p = 0; p < patch.size(); p++) {
             for (auto u: patch[p]) {
                 for (auto v: rel[u]) {
@@ -81,8 +115,8 @@ void Patcher::patch(Csr &patch) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
         for (int p = 0; p < patch.size(); p++) {
-            auto &rel_0 = relation[{n_order - 1, 0}];
-            auto &rel_1 = relation[{0, order}];
+            auto &rel_0 = get_relation(n_order - 1, 0);
+            auto &rel_1 = get_relation(0, order);
             set<int> s;
             for (auto u: owned[order][p]) {
                 s.insert(u);

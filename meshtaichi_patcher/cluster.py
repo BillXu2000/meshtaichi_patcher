@@ -51,11 +51,11 @@ class Cluster:
     def run(self):
         cluster = Cluster_cpp()
         ans = relation.Relation(cluster.run(self.relation.csr))
-        color = [0] * len(self.relation)
-        patch = []
-        for i in ans.keys():
-            patch.append(ans[i])
-            for j in ans[i]:
-                color[j] = i
-        self.color = color
-        self.patch = patch
+        # color = [0] * len(self.relation)
+        # patch = []
+        # for i in ans.keys():
+        #     patch.append(ans[i])
+        #     for j in ans[i]:
+        #         color[j] = i
+        # self.color = color
+        self.patch = ans

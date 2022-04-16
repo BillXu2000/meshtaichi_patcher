@@ -6,13 +6,21 @@ class Mesh:
     def __init__(self, mesh):
         self.position = mesh.vertex_matrix()
         self.n_order = 3
-        self.relation = {(2, 0): Relation(mesh.face_matrix())}
+
+        self.patcher = Patcher_cpp()
+        self.patcher.n_order = self.n_order
+
+        # self.relation = {(2, 0): Relation(mesh.face_matrix())}
+        self.patcher.set_relation(2, 0, Relation(mesh.face_matrix()).csr)
         if len(mesh.edge_matrix()):
-            self.relation[(1, 0)] = Relation(mesh.edge_matrix())
-        self.generate_elements()
+            # self.relation[(1, 0)] = Relation(mesh.edge_matrix())
+            self.patcher.set_relation(1, 0, Relation(mesh.face_matrix()).csr)
+        self.patcher.generate_elements()
+        # self.generate_elements()
     
     def get_size(self, order):
-        return len(self.relation[(order, 0)]) if order > 0 else len(self.position)
+        # return len(self.relation[(order, 0)]) if order > 0 else len(self.position)
+        return self.patcher.get_size(order)
     
     def get_subsets(s):
         if len(s) == 0:
@@ -39,48 +47,50 @@ class Mesh:
             self.relation[(order, 0)] = Relation(np.array(relation))
 
     def get_relation(self, from_end, to_end):
-        if (from_end, to_end) in self.relation:
-            return self.relation[(from_end, to_end)]
-        if from_end < to_end:
-            self.relation[(from_end, to_end)] = self.get_relation(to_end, from_end).transpose()
-            return self.relation[(from_end, to_end)]
-        if from_end == to_end == 0:
-            self.relation[(from_end, to_end)] = self.get_relation(0, 1).mul(self.get_relation(1, 0)).remove_self_loop()
-            return self.relation[(from_end, to_end)]
-        if from_end == to_end:
-            self.relation[(from_end, to_end)] = self.get_relation(from_end, from_end - 1).mul(self.get_relation(from_end - 1, from_end)).remove_self_loop()
-            return self.relation[(from_end, to_end)]
-        # from_end > to_end
-        ele_dict = {}
-        for i, u in enumerate(self.relation[(to_end, 0)]):
-            ele_dict[tuple(sorted(u))] = i
-        relation = []
-        for i, u in enumerate(self.relation[(from_end, 0)]):
-            relation.append([])
-            for v in Mesh.get_subsets(u):
-                v = tuple(sorted(v))
-                if len(v) != to_end + 1:
-                    continue
-                j = ele_dict[v]
-                relation[i].append(j)
-        self.relation[(from_end, to_end)] = Relation(np.array(relation))
-        return self.relation[(from_end, to_end)]
+        return Relation(self.patcher.get_relation(from_end, to_end))
+        # if (from_end, to_end) in self.relation:
+        #     return self.relation[(from_end, to_end)]
+        # if from_end < to_end:
+        #     self.relation[(from_end, to_end)] = self.get_relation(to_end, from_end).transpose()
+        #     return self.relation[(from_end, to_end)]
+        # if from_end == to_end == 0:
+        #     self.relation[(from_end, to_end)] = self.get_relation(0, 1).mul(self.get_relation(1, 0)).remove_self_loop()
+        #     return self.relation[(from_end, to_end)]
+        # if from_end == to_end:
+        #     self.relation[(from_end, to_end)] = self.get_relation(from_end, from_end - 1).mul(self.get_relation(from_end - 1, from_end)).remove_self_loop()
+        #     return self.relation[(from_end, to_end)]
+        # # from_end > to_end
+        # ele_dict = {}
+        # for i, u in enumerate(self.relation[(to_end, 0)]):
+        #     ele_dict[tuple(sorted(u))] = i
+        # relation = []
+        # for i, u in enumerate(self.relation[(from_end, 0)]):
+        #     relation.append([])
+        #     for v in Mesh.get_subsets(u):
+        #         v = tuple(sorted(v))
+        #         if len(v) != to_end + 1:
+        #             continue
+        #         j = ele_dict[v]
+        #         relation[i].append(j)
+        # self.relation[(from_end, to_end)] = Relation(np.array(relation))
+        # return self.relation[(from_end, to_end)]
     
     def patch(self, cluster):
-        self.patcher = Patcher_cpp()
-        for order in range(self.n_order - 1):
-            self.get_relation(self.n_order - 1, order)
-        for order in range(self.n_order):
-            self.get_relation(0, order)
-        for i, j in self.relation:
-            self.patcher.set_relation(i, j, self.relation[(i, j)].csr)
-        self.patcher.n_order = self.n_order
+        # self.patcher = Patcher_cpp()
+        # for order in range(self.n_order - 1):
+        #     self.get_relation(self.n_order - 1, order)
+        # for order in range(self.n_order):
+        #     self.get_relation(0, order)
+        # for i, j in self.relation:
+        #     self.patcher.set_relation(i, j, self.relation[(i, j)].csr)
+        # self.patcher.n_order = self.n_order
         self.patcher.patch(Relation(cluster.patch).csr)
         self.owned = []
         self.total = []
         for order in range(self.n_order):
             self.owned.append(Relation(self.patcher.get_owned(order)))
             self.total.append(Relation(self.patcher.get_total(order)))
+            # print(self.owned[-1].offset, self.owned[-1].value)
         # self.cluster = cluster
         # self.owned = []
         # for order in range(self.n_order - 1):
@@ -133,7 +143,7 @@ class Mesh:
         ans = {}
         ans["from_order"] = from_end
         ans["to_order"] = to_end
-        self.patcher.set_relation(from_end, to_end, self.get_relation(from_end, to_end).csr)
+        # self.patcher.set_relation(from_end, to_end, self.get_relation(from_end, to_end).csr)
         csr = self.patcher.get_relation_meta(from_end, to_end)
         ans["offset"], ans["value"] = csr.offset, csr.value
         ans["patch_offset"] = self.patcher.get_patch_offset(from_end, to_end)

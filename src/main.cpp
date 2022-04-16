@@ -164,14 +164,17 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
 
     py::class_<Cluster>(m, "Cluster_cpp")
         .def(py::init<>())
+        .def_readwrite("patch_size", &Cluster::patch_size)
         .def("run", &Cluster::run)
         ;
 
     py::class_<Patcher>(m, "Patcher_cpp")
         .def(py::init<>())
         .def_readwrite("n_order", &Patcher::n_order)
+        .def("get_size", &Patcher::get_size)
         .def("set_relation", &Patcher::set_relation)
         .def("get_relation", &Patcher::get_relation)
+        .def("generate_elements", &Patcher::generate_elements)
         .def("patch", &Patcher::patch)
         .def("get_owned", &Patcher::get_owned)
         .def("get_total", &Patcher::get_total)
