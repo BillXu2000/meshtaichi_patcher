@@ -171,6 +171,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def(py::init<>())
         .def_readwrite("n_order", &Patcher::n_order)
         .def("set_relation", &Patcher::set_relation)
+        .def("get_relation", &Patcher::get_relation)
         .def("patch", &Patcher::patch)
         .def("get_owned", &Patcher::get_owned)
         .def("get_total", &Patcher::get_total)

@@ -1,7 +1,7 @@
 import taichi as ti
 import meshtaichi_patcher as patcher
 
-# obj_name = "./bunny/bunny0.obj"
+# obj_name = "./bunny/bunny5.obj"
 obj_name = "test.obj"
 # relations = ['ev', 'vv', 'ee']
 relations = ['ev', 'vv']
@@ -11,7 +11,7 @@ ti.init()
 mesh = ti.TetMesh()
 mesh.edges.link(mesh.verts)
 mesh.verts.link(mesh.verts)
-meta = patcher.mesh2meta(obj_name, relations)
+# meta = patcher.mesh2meta(obj_name, relations)
 meta = patcher.meta_test(obj_name, relations)
 bunny = mesh.build(meta)
 

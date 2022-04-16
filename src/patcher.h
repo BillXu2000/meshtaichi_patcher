@@ -9,8 +9,9 @@ struct Patcher {
     int n_order;
 
     Patcher() {}
-    void set_relation(int from_end, int to_end, Csr &rel);
     int get_size(int order);
+    void set_relation(int from_end, int to_end, Csr &rel);
+    Csr &get_relation(int from_end, int to_end);
     void patch(Csr &patch);
     Csr &get_owned(int order);
     Csr &get_total(int order);

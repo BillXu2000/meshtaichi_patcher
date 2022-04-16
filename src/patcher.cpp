@@ -1,13 +1,61 @@
 #include "patcher.h"
 
+int Patcher::get_size(int order) {
+    return relation[{order, 0}].size();
+}
+
 void Patcher::set_relation(int from_end, int to_end, Csr &rel) {
     if (relation.find({from_end, to_end}) == relation.end()) {
         relation[{from_end, to_end}] = rel;
     }
 }
 
-int Patcher::get_size(int order) {
-    return relation[{order, 0}].size();
+Csr& Patcher::get_relation(int from_end, int to_end) {
+    using namespace std;
+    array<int, 2> key{from_end, to_end};
+    if (relation.find(key) != relation.end()) {
+        return relation[key];
+    }
+    if (key[0] < key[1]) {
+        relation[key] = get_relation(key[1], key[0]);
+        return relation[key];
+    }
+    if (key[0] == key[1] && key[0] == 0) {
+        relation[key] = get_relation(0, 1).mul(get_relation(1, 0)).remove_self_loop();
+        return relation[key];
+    }
+    if (key[0] == key[1]) {
+        relation[key] = get_relation(key[0], key[0] - 1).mul(get_relation(key[0] - 1, key[0])).remove_self_loop();
+        return relation[key];
+    }
+    auto &to = relation[{to_end, 0}];
+    map<vector<int>, int> ele_dict;
+    for (int i = 0; i < to.size(); i++) {
+        vector<int> k(to[i].begin(), to[i].end());
+        sort(k.begin(), k.end());
+        ele_dict[k] = i;
+    }
+    vector<int> offset, value;
+    auto &from = relation[{from_end, 0}];
+    offset.push_back(0);
+    for (int u = 0; u < from.size(); u++) {
+        vector<int> subset, k(from[u].begin(), from[u].end());
+        function<void(int)> fun = [&](int i) {
+            if (subset.size() == to_end + 1) {
+                value.push_back(ele_dict[subset]);
+                return;
+            }
+            if (i > from_end) return;
+            fun(i + 1);
+            subset.push_back(k[i]);
+            fun(i + 1);
+            subset.erase(subset.end() - 1);
+        };
+        fun(0);
+        offset.push_back(value.size());
+    }
+    relation[key] = Csr(offset, value);
+    return relation[key];
 }
 
 void Patcher::patch(Csr &patch) {
