@@ -4,7 +4,7 @@ import taichi as ti
 import pymeshlab, pprint
 from . import cluster, relation, mesh
 
-def mesh2meta(filename, relations):
+def mesh2meta_cpp(filename, relations):
     patcher = Patcher()
     start = time.time()
     patcher.run(filename, relations)
@@ -23,34 +23,19 @@ def mesh2meta(filename, relations):
             relation["offset"] = patcher.get_relation_arr("offset", from_order * 4 + to_order)
     data["attrs"]["x"] = patcher.get_mesh_x().reshape(-1)
     start = time.time()
-    pp = pprint.PrettyPrinter(indent=4)
+    # pp = pprint.PrettyPrinter(indent=4)
     # pp.pprint(data)
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def meta_test(filename, relations):
+def mesh2meta(filename, relations):
     ml_ms = pymeshlab.MeshSet()
     ml_ms.load_new_mesh(filename)
     ml_m = ml_ms.current_mesh()
-
-    start = time.time()
     m = mesh.Mesh(ml_m)
-    print('mesh time', time.time() - start)
-
-    start = time.time()
     c = cluster.Cluster(m.get_relation(2, 2), 1024)
     c.run()
-    print('cluster time', time.time() - start)
-
-    start = time.time()
     m.patch(c)
     meta = m.get_meta(relations)
-    print('patch time', time.time() - start)
-    pp = pprint.PrettyPrinter(indent=4)
-    # pp.pprint(meta)
     meta = ti.Mesh.generate_meta(meta)
     return meta
-
-def test_pybind():
-    arr = get_np_test(int(1e6))
-    print(arr.shape, arr.sum(), arr)
