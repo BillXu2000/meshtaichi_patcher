@@ -154,7 +154,7 @@ Csr &Patcher::get_relation_meta(int from_end, int to_end) {
     vector<int> d(get_size(to_end));
     auto &from = from_end > to_end ? total[from_end] : owned[from_end];
     auto &to = total[to_end];
-    auto &rel = relation[{from_end, to_end}];
+    auto &rel = get_relation(from_end, to_end);
     vector<int> offset, value, patch_off;
     for (int p = 0; p < from.size(); p++) {
         for (int j = 0; j < to[p].size(); j++) {

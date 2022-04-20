@@ -2,7 +2,7 @@ from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
 import numpy as np
 
-class Mesh:
+class MeshPatcher:
     def __init__(self, mesh):
         self.position = mesh.vertex_matrix()
         self.n_order = 3
@@ -68,6 +68,7 @@ class Mesh:
                 relation = (c2i[relation[0]], c2i[relation[1]])
             ans["relations"].append(self.get_relation_meta(*relation))
         ans["attrs"] = {'x': self.position.reshape(-1).astype(np.float32)}
+        ans["patcher"] = self
         return ans
 
             

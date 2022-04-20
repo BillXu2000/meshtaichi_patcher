@@ -28,14 +28,19 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(filename, relations):
+def mesh2meta(filename, relations=[]):
     ml_ms = pymeshlab.MeshSet()
     ml_ms.load_new_mesh(filename)
     ml_m = ml_ms.current_mesh()
-    m = mesh.Mesh(ml_m)
+    m = mesh.MeshPatcher(ml_m)
     c = cluster.Cluster(m.get_relation(2, 2), 1024)
     c.run()
     m.patch(c)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
     return meta
+
+def patched_mesh(filename):
+    mesh = ti.TetMesh()
+    meta = mesh2meta(filename)
+    return mesh.build(meta)

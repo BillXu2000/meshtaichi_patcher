@@ -2,7 +2,7 @@ import taichi as ti, sys, os, argparse, subprocess, re, numpy as np, time
 import meshtaichi_patcher as patcher
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mesh', default='./bunny/bunny5.obj')
+parser.add_argument('--mesh', default='/media/hdd/model/scale/bunny/bunny0.obj')
 parser.add_argument('--save_obj', action='store_true')
 parser.add_argument('--num_run', type=int, default=20000000)
 parser.add_argument('--exp', default='ev')
@@ -32,9 +32,7 @@ mesh.verts.place({'x' : vec3f,
 
 mesh.edges.place({'rest_len' : ti.f32}, reorder = args.reorder)
 
-mesh.verts.link(mesh.verts)
-mesh.edges.link(mesh.verts)
-meta = patcher.meta_test(args.mesh, ['ev', 'vv'])
+meta = patcher.mesh2meta(args.mesh)
 bunny = mesh.build(meta)
 
 x = bunny.verts.x.to_numpy()

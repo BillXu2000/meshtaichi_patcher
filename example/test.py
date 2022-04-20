@@ -1,18 +1,11 @@
 import taichi as ti
-import meshtaichi_patcher as patcher
+import meshtaichi_patcher
 
-obj_name = "./bunny/bunny3.obj"
-# obj_name = "test.obj"
-# relations = ['ev', 'vv', 'ee']
-relations = ['fv', 'ev', 'vv', 've', 'vf']
-# relations = ['vv']
+obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
 
 ti.init()
 mesh = ti.TetMesh()
-mesh.edges.link(mesh.verts)
-mesh.verts.link(mesh.verts)
-meta = patcher.mesh2meta(obj_name, relations)
-# meta = patcher.meta_test(obj_name, relations)
+meta = meshtaichi_patcher.mesh2meta(obj_name)
 bunny = mesh.build(meta)
 
 @ti.kernel
