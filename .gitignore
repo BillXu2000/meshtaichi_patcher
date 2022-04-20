@@ -6,3 +6,7 @@ _generate/
 *.py[cod]
 *.egg-info
 *env*
+*.obj
+
+example/bunny
+**/imgui.ini
