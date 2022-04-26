@@ -34,7 +34,7 @@ def mesh2meta(meshes, relations=[]):
         meshes = load_mesh(meshes)
     if not isinstance(meshes, list):
         meshes = [meshes]
-    total = {}
+    total = {0: []}
     for mesh in meshes:
         for i in mesh:
             if i == 0:
@@ -47,7 +47,7 @@ def mesh2meta(meshes, relations=[]):
     for i in total:
         total[i] = np.array(total[i])
     m = meshpatcher.MeshPatcher(total)
-    c = cluster.Cluster(m.get_relation(m.n_order, m.n_order), 1024)
+    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), 1024)
     c.run()
     m.patch(c)
     meta = m.get_meta(relations)

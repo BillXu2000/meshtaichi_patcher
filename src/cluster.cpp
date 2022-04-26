@@ -16,6 +16,7 @@ Csr Cluster::run(Csr &graph) {
             queue<int> q;
             vector<int> con;
             q.push(u);
+            color[u] = 1;
             while (!q.empty()) {
                 int u = q.front();
                 q.pop();
@@ -28,7 +29,7 @@ Csr Cluster::run(Csr &graph) {
                 }
             }
             random_shuffle(con.begin(), con.end());
-            seeds.insert(seeds.end(), con.begin(), con.begin() + max(1, con.size() / patch_size));
+            seeds.insert(seeds.end(), con.begin(), con.begin() + max(1, int(con.size() / patch_size)));
         }
     }
     /*for (int i = 0; i < n; i++) {
