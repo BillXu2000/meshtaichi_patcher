@@ -4,15 +4,15 @@ import numpy as np
 
 class MeshPatcher:
     def __init__(self, mesh):
-        self.position = mesh.vertex_matrix()
-        self.n_order = 3
-
+        self.n_order = 0
         self.patcher = Patcher_cpp()
+        for i in mesh:
+            self.n_order = max(self.n_order, i + 1)
+            if i == 0:
+                self.position = mesh[i]
+            else:
+                self.patcher.set_relation(i, 0, Relation(mesh[i]).csr)
         self.patcher.n_order = self.n_order
-
-        self.patcher.set_relation(2, 0, Relation(mesh.face_matrix()).csr)
-        if len(mesh.edge_matrix()):
-            self.patcher.set_relation(1, 0, Relation(mesh.face_matrix()).csr)
         self.patcher.generate_elements()
     
     def get_size(self, order):

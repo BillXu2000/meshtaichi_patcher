@@ -1,8 +1,9 @@
+from matplotlib.pyplot import isinteractive
 from meshtaichi_patcher_core import *
 import json, time, numpy as np
 import taichi as ti
-import pymeshlab, pprint
-from . import cluster, relation, mesh
+import pymeshlab, pprint, re
+from . import cluster, meshpatcher, relation
 
 def mesh2meta_cpp(filename, relations):
     patcher = Patcher()
@@ -28,12 +29,25 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(filename, relations=[]):
-    ml_ms = pymeshlab.MeshSet()
-    ml_ms.load_new_mesh(filename)
-    ml_m = ml_ms.current_mesh()
-    m = mesh.MeshPatcher(ml_m)
-    c = cluster.Cluster(m.get_relation(2, 2), 1024)
+def mesh2meta(meshes, relations=[]):
+    if isinstance(meshes, str):
+        meshes = load_mesh(meshes)
+    if not isinstance(meshes, list):
+        meshes = [meshes]
+    total = {}
+    for mesh in meshes:
+        for i in mesh:
+            if i == 0:
+                pos = mesh[i]
+            else:
+                if i not in total:
+                    total[i] = []
+                total[i] += list(mesh[i] + len(total[0]))
+        total[0] += list(pos)
+    for i in total:
+        total[i] = np.array(total[i])
+    m = meshpatcher.MeshPatcher(total)
+    c = cluster.Cluster(m.get_relation(m.n_order, m.n_order), 1024)
     c.run()
     m.patch(c)
     meta = m.get_meta(relations)
@@ -44,3 +58,32 @@ def patched_mesh(filename):
     mesh = ti.TetMesh()
     meta = mesh2meta(filename)
     return mesh.build(meta)
+
+def load_mesh(filename):
+    base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', filename)[0]
+    if ext_name in ['node', 'ele']:
+        ans = {}
+        nodes = []
+        with open(f'{base_name}.node', 'r') as fi:
+            lines = fi.readlines()[1: -1]
+        for line in lines:
+            numbers = re.findall(r'.+', line)
+            nodes.append([float(i) for i in numbers[1:]])
+        ans[0] = np.array(nodes)
+        eles = []
+        with open(f'{base_name}.ele', 'r') as fi:
+            lines = fi.readlines()[1: -1]
+        for line in lines:
+            numbers = re.findall(r'.+', line)
+            nodes.append([int(i) for i in numbers[1:]])
+        ans[3] = np.array(eles)
+    else:
+        ml_ms = pymeshlab.MeshSet()
+        ml_ms.load_new_mesh(filename)
+        ml_m = ml_ms.current_mesh()
+        ans = {}
+        ans[0] = ml_m.vertex_matrix()
+        if len(ml_m.edge_matrix()):
+            ans[1] = ml_m.face_matrix()
+        ans[2] = ml_m.face_matrix()
+    return ans
