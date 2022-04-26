@@ -7,12 +7,36 @@ Csr Cluster::run(Csr &graph) {
     using namespace std;
     int n = graph.size();
     vector<int> seeds, color;
-    for (int i = 0; i < n; i++) {
+    color.resize(n);
+    for (auto &i: color) {
+        i = 0;
+    }
+    for (int u = 0; u < n; u++) {
+        if (color[u] == 0) {
+            queue<int> q;
+            vector<int> con;
+            q.push(u);
+            while (!q.empty()) {
+                int u = q.front();
+                q.pop();
+                con.push_back(u);
+                for (auto v : graph[u]) {
+                    if (color[v] == 0) {
+                        color[v] = 1;
+                        q.push(v);
+                    }
+                }
+            }
+            random_shuffle(con.begin(), con.end());
+            seeds.insert(seeds.end(), con.begin(), con.begin() + max(1, con.size() / patch_size));
+        }
+    }
+    /*for (int i = 0; i < n; i++) {
         seeds.push_back(i);
     }
     srand(0);
     random_shuffle(seeds.begin(), seeds.end());
-    seeds.erase(seeds.begin() + max(n / patch_size, 1), seeds.end());
+    seeds.erase(seeds.begin() + max(n / patch_size, 1), seeds.end());*/
 
     color.resize(n);
     while(true) {
