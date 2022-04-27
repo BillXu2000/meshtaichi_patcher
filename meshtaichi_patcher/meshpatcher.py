@@ -1,17 +1,23 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
-import numpy as np
+import numpy as np, pymeshlab
 
 class MeshPatcher:
     def __init__(self, mesh):
         self.n_order = 0
         self.patcher = Patcher_cpp()
+        self.face = None
         for i in mesh:
-            self.n_order = max(self.n_order, i + 1)
-            if i == 0:
-                self.position = mesh[i]
-            else:
-                self.patcher.set_relation(i, 0, Relation(mesh[i]).csr)
+            if isinstance(i, int):
+                self.n_order = max(self.n_order, i + 1)
+                if i == 0:
+                    self.position = mesh[i]
+                else:
+                    self.patcher.set_relation(i, 0, Relation(mesh[i]).csr)
+            if i == 2:
+                self.face = mesh[i]
+        if 'face' in mesh and mesh['face'] is not None:
+            self.face = mesh['face']
         self.patcher.n_order = self.n_order
         self.patcher.generate_elements()
     
@@ -70,5 +76,11 @@ class MeshPatcher:
         ans["attrs"] = {'x': self.position.reshape(-1).astype(np.float32)}
         ans["patcher"] = self
         return ans
-
-            
+    
+    def export_obj(self, filename, vm=None):
+        if vm == None:
+            vm = self.position
+        ms = pymeshlab.MeshSet()
+        ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
+        # ms.add_mesh(pymeshlab.Mesh(vertex_matrix=bunny.verts.x.to_numpy(), face_matrix=vertices.to_numpy(), v_color_matrix=vert_colors))
+        ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)

@@ -2,7 +2,7 @@ from matplotlib.pyplot import isinteractive
 from meshtaichi_patcher_core import *
 import json, time, numpy as np
 import taichi as ti
-import pymeshlab, pprint, re
+import pymeshlab, pprint, re, os
 from . import cluster, meshpatcher, relation
 
 def mesh2meta_cpp(filename, relations):
@@ -29,7 +29,7 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(meshes, relations=[]):
+def mesh2meta(meshes, relations=[], patch_size=256):
     if isinstance(meshes, str):
         meshes = load_mesh(meshes)
     if not isinstance(meshes, list):
@@ -47,7 +47,7 @@ def mesh2meta(meshes, relations=[]):
     for i in total:
         total[i] = np.array(total[i])
     m = meshpatcher.MeshPatcher(total)
-    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), 1024)
+    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), patch_size)
     c.run()
     m.patch(c)
     meta = m.get_meta(relations)
@@ -63,20 +63,19 @@ def load_mesh(filename):
     base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', filename)[0]
     if ext_name in ['node', 'ele']:
         ans = {}
-        nodes = []
-        with open(f'{base_name}.node', 'r') as fi:
-            lines = fi.readlines()[1: -1]
-        for line in lines:
-            numbers = re.findall(r'.+', line)
-            nodes.append([float(i) for i in numbers[1:]])
-        ans[0] = np.array(nodes)
-        eles = []
-        with open(f'{base_name}.ele', 'r') as fi:
-            lines = fi.readlines()[1: -1]
-        for line in lines:
-            numbers = re.findall(r'.+', line)
-            nodes.append([int(i) for i in numbers[1:]])
-        ans[3] = np.array(eles)
+        def name2np(filename, type, size):
+            if not os.path.exists(filename):
+                return None
+            lists = []
+            with open(filename, 'r') as fi:
+                lines = fi.readlines()[1: -1]
+            for line in lines:
+                numbers = re.findall(r'\S+', line)
+                lists.append([type(i) for i in numbers[1: size + 1]])
+            return np.array(lists)
+        ans[0] = name2np(f'{base_name}.node', float, 3)
+        ans[3] = name2np(f'{base_name}.ele', int, 4)
+        ans["face"] = name2np(f'{base_name}.face', int, 3)
     else:
         ml_ms = pymeshlab.MeshSet()
         ml_ms.load_new_mesh(filename)
