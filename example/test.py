@@ -4,9 +4,21 @@ import meshtaichi_patcher
 obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
 
 ti.init()
+
+meshes = []
+for i in range(3):
+    mesh = meshtaichi_patcher.load_mesh(obj_name)
+    for i in mesh:
+        if i:
+            mesh[i] += 3
+    meshes.append(mesh)
+
+
 mesh = ti.TetMesh()
-meta = meshtaichi_patcher.mesh2meta(obj_name)
+# meta = meshtaichi_patcher.mesh2meta(obj_name)
+meta = meshtaichi_patcher.mesh2meta(meshes)
 bunny = mesh.build(meta)
+
 
 @ti.kernel
 def ra():
