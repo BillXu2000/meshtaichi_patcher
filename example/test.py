@@ -15,7 +15,7 @@ for i in range(3):
 
 mesh = ti.TetMesh()
 # meta = meshtaichi_patcher.mesh2meta(obj_name)
-meta = meshtaichi_patcher.mesh2meta(meshes)
+meta = meshtaichi_patcher.mesh2meta(meshes, patch_size=512)
 bunny = mesh.build(meta)
 
 

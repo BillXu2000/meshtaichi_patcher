@@ -29,7 +29,7 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(meshes, relations=[]):
+def mesh2meta(meshes, relations=[], patch_size=256):
     if isinstance(meshes, str):
         meshes = load_mesh(meshes)
     if not isinstance(meshes, list):
@@ -47,7 +47,7 @@ def mesh2meta(meshes, relations=[]):
     for i in total:
         total[i] = np.array(total[i])
     m = meshpatcher.MeshPatcher(total)
-    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), 1024)
+    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), patch_size)
     c.run()
     m.patch(c)
     meta = m.get_meta(relations)

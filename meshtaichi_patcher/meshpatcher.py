@@ -81,8 +81,6 @@ class MeshPatcher:
         if vm == None:
             vm = self.position
         ms = pymeshlab.MeshSet()
-        print(vm, vm.shape)
-        print(self.face, self.face.shape)
         ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
         # ms.add_mesh(pymeshlab.Mesh(vertex_matrix=bunny.verts.x.to_numpy(), face_matrix=vertices.to_numpy(), v_color_matrix=vert_colors))
         ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
