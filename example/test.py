@@ -1,16 +1,15 @@
 import taichi as ti
 import meshtaichi_patcher
 
-obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
+# obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
+obj_name = "/media/hdd/model/scale/bunny/bunny0.1.node"
 
 ti.init()
 
 meshes = []
 for i in range(3):
     mesh = meshtaichi_patcher.load_mesh(obj_name)
-    for i in mesh:
-        if i:
-            mesh[i] += 3
+    mesh[0] += i * 200 # mesh[0] is the positions of vertices
     meshes.append(mesh)
 
 
@@ -37,3 +36,5 @@ def ra():
         #     print(i.id, i.verts[j].id)
     print(sum)
 ra()
+
+meta.patcher.export_obj('test.obj')
