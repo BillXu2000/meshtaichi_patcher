@@ -45,11 +45,11 @@ class MeshPatcher:
         g2r = [0] * self.get_size(order)
         for i, k in enumerate(tmp):
             g2r[k] = i
-        ans["g2r_mapping"] = np.array(g2r)
+        ans["g2r_mapping"] = np.array(g2r, dtype=np.int32)
         l2r = []
         for k in ans["l2g_mapping"]:
             l2r.append(g2r[k])
-        ans["l2r_mapping"] = np.array(l2r)
+        ans["l2r_mapping"] = np.array(l2r, dtype=np.int32)
         return ans
     
     def get_relation_meta(self, from_end, to_end):
@@ -57,7 +57,7 @@ class MeshPatcher:
         ans["from_order"] = from_end
         ans["to_order"] = to_end
         csr = self.patcher.get_relation_meta(from_end, to_end)
-        ans["offset"], ans["value"] = csr.offset, csr.value
+        ans["offset"], ans["value"] = csr.offset.astype(np.uint16), csr.value.astype(np.uint16)
         ans["patch_offset"] = self.patcher.get_patch_offset(from_end, to_end)
         return ans
     
@@ -82,5 +82,7 @@ class MeshPatcher:
             vm = self.position
         ms = pymeshlab.MeshSet()
         ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
-        # ms.add_mesh(pymeshlab.Mesh(vertex_matrix=bunny.verts.x.to_numpy(), face_matrix=vertices.to_numpy(), v_color_matrix=vert_colors))
         ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
+    
+    def face_matrix(self):
+        return self.face

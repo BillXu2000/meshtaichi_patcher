@@ -1,5 +1,5 @@
 import taichi as ti
-import meshtaichi_patcher
+import meshtaichi_patcher, pymeshlab
 
 # obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
 obj_name = "/media/hdd/model/scale/bunny/bunny0.1.node"
@@ -15,6 +15,8 @@ for i in range(3):
 
 mesh = ti.TetMesh()
 # meta = meshtaichi_patcher.mesh2meta(obj_name)
+vec3f = ti.types.vector(3, ti.f32)
+mesh.verts.place({'x' : vec3f}) 
 meta = meshtaichi_patcher.mesh2meta(meshes, patch_size=512)
 bunny = mesh.build(meta)
 
@@ -37,4 +39,7 @@ def ra():
     print(sum)
 ra()
 
-meta.patcher.export_obj('test.obj')
+# meta.patcher.export_obj()
+ms = pymeshlab.MeshSet()
+ms.add_mesh(pymeshlab.Mesh(vertex_matrix=bunny.verts.x.to_numpy(), face_matrix=bunny.patcher.face))
+ms.save_current_mesh('/home/bx2k/transport/test.obj', binary=False, save_vertex_quality=False)
