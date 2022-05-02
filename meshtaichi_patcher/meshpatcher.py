@@ -1,6 +1,7 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
 import numpy as np, pymeshlab
+import matplotlib.pyplot as plt
 
 class MeshPatcher:
     def __init__(self, mesh):
@@ -86,3 +87,16 @@ class MeshPatcher:
     
     def face_matrix(self):
         return self.face
+    
+    def stats(self):
+        # order = self.n_order - 1
+        fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 10))
+        for order in range(self.n_order):
+            axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
+            axs[0, order].set_title(f"owned, order = {order}")
+            axs[0, order].set_ylim(bottom=0)
+            axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
+            axs[1, order].set_title(f"total, order = {order}")
+            axs[1, order].set_ylim(bottom=0)
+        # plt.show()
+        plt.savefig('/home/bx2k/transport/patcher.svg')
