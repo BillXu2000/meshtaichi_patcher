@@ -20,7 +20,14 @@ class MeshPatcher:
         if 'face' in mesh and mesh['face'] is not None:
             self.face = mesh['face']
         self.patcher.n_order = self.n_order
-        self.patcher.generate_elements()
+        self.patched = False
+    
+    def write(self, filename):
+        self.patcher.write(filename)
+    
+    def read(self, filename):
+        self.patcher.read(filename)
+        self.patched = True
     
     def get_size(self, order):
         return self.patcher.get_size(order)
@@ -29,13 +36,11 @@ class MeshPatcher:
         return Relation(self.patcher.get_relation(from_end, to_end))
     
     def patch(self, patch_size):
+        if self.patched: return
+        self.patcher.generate_elements()
         self.patcher.patch_size = patch_size
         self.patcher.patch()
-        self.owned = []
-        self.total = []
-        for order in range(self.n_order):
-            self.owned.append(Relation(self.patcher.get_owned(order)))
-            self.total.append(Relation(self.patcher.get_total(order)))
+        self.patched = True
     
     def get_element_meta(self, order):
         ans = {}
@@ -64,6 +69,11 @@ class MeshPatcher:
         return ans
     
     def get_meta(self, relations):
+        self.owned = []
+        self.total = []
+        for order in range(self.n_order):
+            self.owned.append(Relation(self.patcher.get_owned(order)))
+            self.total.append(Relation(self.patcher.get_total(order)))
         c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
         ans = {}
         ans["num_patches"] = len(self.owned[-1])

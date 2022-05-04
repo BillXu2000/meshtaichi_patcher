@@ -20,4 +20,6 @@ struct Patcher {
     Csr &get_relation_meta(int from_end, int to_end);
     py::array_t<int> get_patch_offset(int from_end, int to_end);
 
+    void write(std::string filename);
+    void read(std::string filename);
 };

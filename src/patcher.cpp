@@ -1,4 +1,6 @@
 #include "patcher.h"
+#include <fstream>
+#include <iostream>
 
 int Patcher::get_size(int order) {
     return order ? relation[{order, 0}].size() : relation[{0, n_order - 1}].size();
@@ -119,17 +121,20 @@ void Patcher::patch() {
     for (int order = 0; order < n_order; order++) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
+        vector<int> s(get_size(order));
+        for (auto &i: s) {
+            i = -1;
+        }
         for (int p = 0; p < patch.size(); p++) {
-            unordered_set<int> s;
             for (auto u: owned[order][p]) {
-                s.insert(u);
+                s[u] = p;
                 val_new.push_back(u);
             }
             for (auto v: verts[p]) {
                 auto &rel = get_relation(0, order);
                 for (auto w: rel[v]) {
-                    if (s.find(w) == s.end()) {
-                        s.insert(w);
+                    if (s[w] < p) {
+                        s[w] = p;
                         val_new.push_back(w);
                     }
                 }
@@ -180,4 +185,124 @@ Csr &Patcher::get_relation_meta(int from_end, int to_end) {
 py::array_t<int> Patcher::get_patch_offset(int from_end, int to_end) {
     auto &p = patch_offset[{from_end, to_end}];
     return py::array_t<int>(p.size(), p.data());
+}
+
+void Patcher::write(std::string filename) {
+    using namespace std;
+    fstream out(filename, fstream::out | fstream::binary);
+    auto write_int = [&](int i) {
+        out.write(reinterpret_cast<char*>(&i), sizeof(i));
+    };
+    auto write_vector = [&](vector<int> &arr) {
+        write_int(arr.size());
+        for (auto i: arr) {
+            write_int(i);
+        }
+    };
+    namespace py = pybind11;
+    auto write_np = [&](py::array_t<int> &x) {
+        auto arr = x.mutable_unchecked<1>();
+        write_int(int(arr.shape(0)));
+        for (py::ssize_t i = 0; i < arr.shape(0); i++) {
+            write_int(arr(i));
+        }
+    };
+    auto write_csr = [&](Csr &csr) {
+        write_np(csr.offset);
+        write_np(csr.value);
+    };
+    typedef array<int, 2> int2;
+    auto write_map_int2_csr = [&](map<int2, Csr> &m) {
+        write_int(m.size());
+        for (auto &i: m) {
+            write_int(i.first[0]);
+            write_int(i.first[1]);
+            write_csr(i.second);
+        }
+    };
+    auto write_map_int_csr = [&](map<int, Csr> &m) {
+        write_int(m.size());
+        for (auto &i: m) {
+            write_int(i.first);
+            write_csr(i.second);
+        }
+    };
+    auto write_map_int2_vec = [&](map<int2, vector<int>> &m) {
+        write_int(m.size());
+        for (auto &i: m) {
+            write_int(i.first[0]);
+            write_int(i.first[1]);
+            write_vector(i.second);
+        }
+    };
+    write_map_int2_csr(relation);
+    write_map_int2_csr(relation_meta);
+    write_map_int_csr(owned);
+    write_map_int_csr(total);
+    write_map_int2_vec(patch_offset);
+    write_int(n_order);
+    write_int(patch_size);
+}
+
+void Patcher::read(std::string filename) {
+    using namespace std;
+    fstream in(filename, fstream::in | fstream::binary);
+    auto read_int = [&]() {
+        int i;
+        in.read(reinterpret_cast<char*>(&i), sizeof(i));
+        return i;
+    };
+    auto read_vector = [&]() {
+        int n = read_int();
+        vector<int> ans(n);
+        for (auto &i: ans) {
+            i = read_int();
+        }
+        return ans;
+    };
+    auto read_csr = [&]() {
+        auto off = read_vector();
+        auto val = read_vector();
+        return Csr(off, val);
+    };
+    typedef array<int, 2> int2;
+    auto read_map_int2_csr = [&]() {
+        map<int2, Csr> m;
+        int n = read_int();
+        for (int i = 0; i < n; i++) {
+            auto i0 = read_int();
+            auto i1 = read_int();
+            auto csr = read_csr();
+            m[{i0, i1}] = csr;
+        }
+        return m;
+    };
+    auto read_map_int_csr = [&]() {
+        map<int, Csr> m;
+        int n = read_int();
+        for (int i = 0; i < n; i++) {
+            auto i0 = read_int();
+            auto csr = read_csr();
+            m[i0] = csr;
+        }
+        return m;
+    };
+    auto read_map_int2_vec = [&]() {
+        map<int2, vector<int>> m;
+        int n = read_int();
+        for (int i = 0; i < n; i++) {
+            auto i0 = read_int();
+            auto i1 = read_int();
+            auto vec = read_vector();
+            m[{i0, i1}] = vec;
+        }
+        return m;
+    };
+    relation = read_map_int2_csr();
+    relation_meta = read_map_int2_csr();
+    owned = read_map_int_csr();
+    total = read_map_int_csr();
+    patch_offset = read_map_int2_vec();
+    n_order = read_int();
+    patch_size = read_int();
 }

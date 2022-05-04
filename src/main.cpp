@@ -183,6 +183,8 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("get_total", &Patcher::get_total)
         .def("get_relation_meta", &Patcher::get_relation_meta)
         .def("get_patch_offset", &Patcher::get_patch_offset)
+        .def("write", &Patcher::write)
+        .def("read", &Patcher::read)
         ;
 
 }
