@@ -1,9 +1,8 @@
-from matplotlib.pyplot import isinteractive
 from meshtaichi_patcher_core import *
 import json, time, numpy as np
 import taichi as ti
 import pymeshlab, pprint, re, os
-from . import cluster, meshpatcher, relation
+from . import meshpatcher, relation
 
 def mesh2meta_cpp(filename, relations):
     patcher = Patcher()
@@ -47,9 +46,7 @@ def mesh2meta(meshes, relations=[], patch_size=256):
     for i in total:
         total[i] = np.array(total[i])
     m = meshpatcher.MeshPatcher(total)
-    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), patch_size)
-    c.run()
-    m.patch(c)
+    m.patch(patch_size)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
     return meta

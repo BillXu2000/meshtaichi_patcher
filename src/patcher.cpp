@@ -46,7 +46,7 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
                 value.push_back(ele_dict[subset]);
                 return;
             }
-            if (i >= k.size()) return;
+            if (subset.size() + k.size() - i < to_end + 1) return;
             fun(i + 1);
             subset.push_back(k[i]);
             fun(i + 1);
@@ -80,7 +80,7 @@ void Patcher::generate_elements() {
                     s.insert(subset);
                     return;
                 }
-                if (i >= k.size()) return;
+                if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
                 fun(i + 1);
                 subset.push_back(k[i]);
                 fun(i + 1);
@@ -92,8 +92,12 @@ void Patcher::generate_elements() {
     }
 }
 
-void Patcher::patch(Csr &patch) {
+void Patcher::patch() {
     using namespace std;
+    auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
+    auto cluster = Cluster();
+    cluster.patch_size = patch_size;
+    auto patch = cluster.run_greedy(rel_cluster);
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
@@ -111,24 +115,22 @@ void Patcher::patch(Csr &patch) {
         owned[order] = Csr(pairs);
     }
     owned[n_order - 1] = patch;
+    Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
     for (int order = 0; order < n_order; order++) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
         for (int p = 0; p < patch.size(); p++) {
-            auto &rel_0 = get_relation(n_order - 1, 0);
-            auto &rel_1 = get_relation(0, order);
-            set<int> s;
+            unordered_set<int> s;
             for (auto u: owned[order][p]) {
                 s.insert(u);
                 val_new.push_back(u);
             }
-            for (auto u: patch[p]) {
-                for (auto v: rel_0[u]) {
-                    for (auto w: rel_1[v]) {
-                        if (s.find(w) == s.end()) {
-                            s.insert(w);
-                            val_new.push_back(w);
-                        }
+            for (auto v: verts[p]) {
+                auto &rel = get_relation(0, order);
+                for (auto w: rel[v]) {
+                    if (s.find(w) == s.end()) {
+                        s.insert(w);
+                        val_new.push_back(w);
                     }
                 }
             }

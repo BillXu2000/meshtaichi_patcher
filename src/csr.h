@@ -33,6 +33,7 @@ struct Csr {
     int size();
     Csr transpose();
     Csr mul(Csr&);
+    Csr mul_unique(Csr&);
     Csr remove_self_loop();
     void print();
 };

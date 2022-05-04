@@ -28,8 +28,9 @@ class MeshPatcher:
     def get_relation(self, from_end, to_end):
         return Relation(self.patcher.get_relation(from_end, to_end))
     
-    def patch(self, cluster):
-        self.patcher.patch(Relation(cluster.patch).csr)
+    def patch(self, patch_size):
+        self.patcher.patch_size = patch_size
+        self.patcher.patch()
         self.owned = []
         self.total = []
         for order in range(self.n_order):
@@ -90,7 +91,7 @@ class MeshPatcher:
     
     def stats(self):
         # order = self.n_order - 1
-        fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 10))
+        fig, axs = plt.subplots(nrows=3, ncols=self.n_order, figsize=(4 * self.n_order, 10))
         for order in range(self.n_order):
             axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
             axs[0, order].set_title(f"owned, order = {order}")
@@ -98,5 +99,9 @@ class MeshPatcher:
             axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
             axs[1, order].set_title(f"total, order = {order}")
             axs[1, order].set_ylim(bottom=0)
+            axs[2, order].bar(0, self.owned[order].total_size() / self.total[order].total_size(), label='ribbon rate')
+            axs[2, order].set_ylim(top=1)
+            axs[2, order].set_title("ribbon rates")
+            
         # plt.show()
         plt.savefig('/home/bx2k/transport/patcher.svg')
