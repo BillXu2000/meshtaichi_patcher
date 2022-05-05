@@ -8,7 +8,7 @@ obj_name = "/home/bx2k/models/bunny/bunny4.1.node"
 # obj_name = "/home/bx2k/models/bunny/bunny0.obj"
 
 pr = cProfile.Profile()
-# pr.enable()
+pr.enable()
 
 ti.init()
 
@@ -20,12 +20,12 @@ mesh.edges.place({'y' : vec3f})
 meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=1024, cache=True)
 bunny = mesh.build(meta)
 
-# pr.disable()
-# pr.print_stats(sort=SortKey.CUMULATIVE)
-# s = io.StringIO()
-# sortby = SortKey.CUMULATIVE
-# ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-# ps.print_stats()
-# print(s.getvalue())
+pr.disable()
+pr.print_stats(sort=SortKey.CUMULATIVE)
+s = io.StringIO()
+sortby = SortKey.CUMULATIVE
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print(s.getvalue())
 
 meta.patcher.stats()

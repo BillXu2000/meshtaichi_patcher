@@ -32,7 +32,6 @@ def mesh2meta_cpp(filename, relations):
 def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
     if isinstance(meshes, str):
         mesh_name = meshes
-        meshes = load_mesh(meshes)
     if not isinstance(meshes, list):
         # meshes = [meshes]
         total = meshes
@@ -49,7 +48,7 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
             total[0] += list(pos)
         for i in total:
             total[i] = np.array(total[i])
-    m = meshpatcher.MeshPatcher(total)
+    m = None
     if cache:
         base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', mesh_name)[0]
         if ext_name in ['node', 'ele']:
@@ -61,7 +60,12 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
         cache_name = f'{sha}_{patch_size}'
         cache_path = path.expanduser(f'~/.patcher_cache/{cache_name}')
         if path.exists(cache_path):
+            m = meshpatcher.MeshPatcher()
             m.read(cache_path)
+    if m == None:
+        if isinstance(total, str):
+            total = load_mesh(total)
+        m = meshpatcher.MeshPatcher(total)
     m.patch(patch_size)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)

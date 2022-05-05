@@ -46,3 +46,7 @@ class Relation:
     
     def print(self):
         print(self.offset, self.value)
+    
+    def to_numpy(self):
+        if self.value.shape[0]: return self.value.reshape(self.offset[-1], -1)
+        else: return self.value

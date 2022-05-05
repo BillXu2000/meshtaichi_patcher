@@ -185,6 +185,9 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("get_patch_offset", &Patcher::get_patch_offset)
         .def("write", &Patcher::write)
         .def("read", &Patcher::read)
+        .def("get_face", &Patcher::get_face)
+        .def("set_pos", &Patcher::set_pos)
+        .def("get_pos", &Patcher::get_pos)
         ;
 
 }

@@ -4,10 +4,13 @@ import numpy as np, pymeshlab
 import matplotlib.pyplot as plt
 
 class MeshPatcher:
-    def __init__(self, mesh):
-        self.n_order = 0
+    def __init__(self, mesh=None):
         self.patcher = Patcher_cpp()
+        self.n_order = 0
         self.face = None
+        self.position = None
+        if mesh == None:
+            return
         for i in mesh:
             if isinstance(i, int):
                 self.n_order = max(self.n_order, i + 1)
@@ -19,6 +22,10 @@ class MeshPatcher:
                 self.face = mesh[i]
         if 'face' in mesh and mesh['face'] is not None:
             self.face = mesh['face']
+        if self.face is not None:
+            self.patcher.set_relation(2, -1, Relation(self.face).csr)
+        if self.position is not None:
+            self.patcher.set_pos(self.position.astype(np.float32).reshape(-1))
         self.patcher.n_order = self.n_order
         self.patched = False
     
@@ -27,6 +34,9 @@ class MeshPatcher:
     
     def read(self, filename):
         self.patcher.read(filename)
+        self.n_order = self.patcher.n_order
+        self.face = Relation(self.patcher.get_face()).to_numpy()
+        self.position = self.patcher.get_pos().reshape(-1, 3)
         self.patched = True
     
     def get_size(self, order):

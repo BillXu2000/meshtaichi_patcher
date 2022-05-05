@@ -8,6 +8,7 @@ struct Patcher {
     std::map<int, Csr> owned, total;
     std::map<std::array<int, 2>, std::vector<int>> patch_offset;
     int n_order, patch_size = -1;
+    pybind11::array_t<float> position;
 
     Patcher() {}
     int get_size(int order);
@@ -22,4 +23,8 @@ struct Patcher {
 
     void write(std::string filename);
     void read(std::string filename);
+    Csr &get_face();
+
+    void set_pos(pybind11::array_t<float>);
+    pybind11::array_t<float> get_pos();
 };

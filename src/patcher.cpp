@@ -193,6 +193,9 @@ void Patcher::write(std::string filename) {
     auto write_int = [&](int i) {
         out.write(reinterpret_cast<char*>(&i), sizeof(i));
     };
+    auto write_float = [&](float i) {
+        out.write(reinterpret_cast<char*>(&i), sizeof(i));
+    };
     auto write_vector = [&](vector<int> &arr) {
         write_int(arr.size());
         for (auto i: arr) {
@@ -242,6 +245,13 @@ void Patcher::write(std::string filename) {
     write_map_int2_vec(patch_offset);
     write_int(n_order);
     write_int(patch_size);
+    {
+        auto arr = position.mutable_unchecked<1>();
+        write_int(int(arr.shape(0)));
+        for (py::ssize_t i = 0; i < arr.shape(0); i++) {
+            write_float(arr(i));
+        }
+    }
 }
 
 void Patcher::read(std::string filename) {
@@ -249,6 +259,11 @@ void Patcher::read(std::string filename) {
     fstream in(filename, fstream::in | fstream::binary);
     auto read_int = [&]() {
         int i;
+        in.read(reinterpret_cast<char*>(&i), sizeof(i));
+        return i;
+    };
+    auto read_float = [&]() {
+        float i;
         in.read(reinterpret_cast<char*>(&i), sizeof(i));
         return i;
     };
@@ -305,4 +320,29 @@ void Patcher::read(std::string filename) {
     patch_offset = read_map_int2_vec();
     n_order = read_int();
     patch_size = read_int();
+    namespace py = pybind11;
+    {
+        int n = read_int();
+        vector<float> ans(n);
+        for (auto &i: ans) {
+            i = read_float();
+        }
+        position = py::array_t<float>(ans.size(), ans.data());
+    }
+}
+
+Csr& Patcher::get_face() {
+    auto i = relation.find({2, -1});
+    if (i == relation.end()) {
+        relation[{2, -1}] = Csr();
+    }
+    return relation[{2, -1}];
+}
+
+void Patcher::set_pos(pybind11::array_t<float> arr) {
+    position = arr;
+}
+
+pybind11::array_t<float> Patcher::get_pos() {
+    return position;
 }
