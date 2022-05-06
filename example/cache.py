@@ -10,7 +10,7 @@ mesh = ti.TetMesh()
 # meta = meshtaichi_patcher.mesh2meta(obj_name)
 vec3f = ti.types.vector(3, ti.f32)
 mesh.verts.place({'x' : vec3f}) 
-meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=512) # use cache=True here to generate a metafile under ~/.patch_cache
+meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=512) # use cache=True here to generate or autoload a metafile under ~/.patch_cache
 meshtaichi_patcher.save_meta("./metafile", meta)
 meta = meshtaichi_patcher.load_meta("./metafile")
 bunny = mesh.build(meta)
