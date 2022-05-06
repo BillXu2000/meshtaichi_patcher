@@ -1,12 +1,16 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
 import numpy as np, pymeshlab
+import matplotlib.pyplot as plt
 
 class MeshPatcher:
-    def __init__(self, mesh):
-        self.n_order = 0
+    def __init__(self, mesh=None):
         self.patcher = Patcher_cpp()
+        self.n_order = 0
         self.face = None
+        self.position = None
+        if mesh == None:
+            return
         for i in mesh:
             if isinstance(i, int):
                 self.n_order = max(self.n_order, i + 1)
@@ -18,8 +22,22 @@ class MeshPatcher:
                 self.face = mesh[i]
         if 'face' in mesh and mesh['face'] is not None:
             self.face = mesh['face']
+        if self.face is not None:
+            self.patcher.set_relation(2, -1, Relation(self.face).csr)
+        if self.position is not None:
+            self.patcher.set_pos(self.position.astype(np.float32).reshape(-1))
         self.patcher.n_order = self.n_order
-        self.patcher.generate_elements()
+        self.patched = False
+    
+    def write(self, filename):
+        self.patcher.write(filename)
+    
+    def read(self, filename):
+        self.patcher.read(filename)
+        self.n_order = self.patcher.n_order
+        self.face = Relation(self.patcher.get_face()).to_numpy()
+        self.position = self.patcher.get_pos().reshape(-1, 3)
+        self.patched = True
     
     def get_size(self, order):
         return self.patcher.get_size(order)
@@ -27,13 +45,12 @@ class MeshPatcher:
     def get_relation(self, from_end, to_end):
         return Relation(self.patcher.get_relation(from_end, to_end))
     
-    def patch(self, cluster):
-        self.patcher.patch(Relation(cluster.patch).csr)
-        self.owned = []
-        self.total = []
-        for order in range(self.n_order):
-            self.owned.append(Relation(self.patcher.get_owned(order)))
-            self.total.append(Relation(self.patcher.get_total(order)))
+    def patch(self, patch_size):
+        if self.patched: return
+        self.patcher.generate_elements()
+        self.patcher.patch_size = patch_size
+        self.patcher.patch()
+        self.patched = True
     
     def get_element_meta(self, order):
         ans = {}
@@ -62,6 +79,11 @@ class MeshPatcher:
         return ans
     
     def get_meta(self, relations):
+        self.owned = []
+        self.total = []
+        for order in range(self.n_order):
+            self.owned.append(Relation(self.patcher.get_owned(order)))
+            self.total.append(Relation(self.patcher.get_total(order)))
         c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
         ans = {}
         ans["num_patches"] = len(self.owned[-1])
@@ -86,3 +108,20 @@ class MeshPatcher:
     
     def face_matrix(self):
         return self.face
+    
+    def stats(self):
+        # order = self.n_order - 1
+        fig, axs = plt.subplots(nrows=3, ncols=self.n_order, figsize=(4 * self.n_order, 10))
+        for order in range(self.n_order):
+            axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
+            axs[0, order].set_title(f"owned, order = {order}")
+            axs[0, order].set_ylim(bottom=0)
+            axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
+            axs[1, order].set_title(f"total, order = {order}")
+            axs[1, order].set_ylim(bottom=0)
+            axs[2, order].bar(0, self.owned[order].total_size() / self.total[order].total_size(), label='ribbon rate')
+            axs[2, order].set_ylim(top=1)
+            axs[2, order].set_title("ribbon rates")
+            
+        # plt.show()
+        plt.savefig('/home/bx2k/transport/patcher.svg')

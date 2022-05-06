@@ -151,6 +151,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def_readwrite("value", &Csr::value)
         .def("transpose", &Csr::transpose)
         .def("mul", &Csr::mul)
+        .def("mul_unique", &Csr::mul_unique)
         .def("remove_self_loop", &Csr::remove_self_loop)
         ;
 
@@ -162,15 +163,17 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         return py::array_t<int>(a.size(), a.data());
     });
 
-    py::class_<Cluster>(m, "Cluster_cpp")
-        .def(py::init<>())
-        .def_readwrite("patch_size", &Cluster::patch_size)
-        .def("run", &Cluster::run)
-        ;
+    // py::class_<Cluster>(m, "Cluster_cpp")
+    //     .def(py::init<>())
+    //     .def_readwrite("patch_size", &Cluster::patch_size)
+    //     .def("run", &Cluster::run)
+    //     .def("run_greedy", &Cluster::run_greedy)
+    //     ;
 
     py::class_<Patcher>(m, "Patcher_cpp")
         .def(py::init<>())
         .def_readwrite("n_order", &Patcher::n_order)
+        .def_readwrite("patch_size", &Patcher::patch_size)
         .def("get_size", &Patcher::get_size)
         .def("set_relation", &Patcher::set_relation)
         .def("get_relation", &Patcher::get_relation)
@@ -180,6 +183,11 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("get_total", &Patcher::get_total)
         .def("get_relation_meta", &Patcher::get_relation_meta)
         .def("get_patch_offset", &Patcher::get_patch_offset)
+        .def("write", &Patcher::write)
+        .def("read", &Patcher::read)
+        .def("get_face", &Patcher::get_face)
+        .def("set_pos", &Patcher::set_pos)
+        .def("get_pos", &Patcher::get_pos)
         ;
 
 }

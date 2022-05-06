@@ -1,9 +1,9 @@
-from matplotlib.pyplot import isinteractive
 from meshtaichi_patcher_core import *
 import json, time, numpy as np
 import taichi as ti
-import pymeshlab, pprint, re, os
-from . import cluster, meshpatcher, relation
+import pymeshlab, pprint, re, os, subprocess
+from . import meshpatcher, relation
+from os import path
 
 def mesh2meta_cpp(filename, relations):
     patcher = Patcher()
@@ -29,30 +29,60 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(meshes, relations=[], patch_size=256):
+def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
     if isinstance(meshes, str):
-        meshes = load_mesh(meshes)
+        mesh_name = meshes
     if not isinstance(meshes, list):
-        meshes = [meshes]
-    total = {0: []}
-    for mesh in meshes:
-        for i in mesh:
-            if i == 0:
-                pos = mesh[i]
-            else:
-                if i not in total:
-                    total[i] = []
-                total[i] += list(mesh[i] + len(total[0]))
-        total[0] += list(pos)
-    for i in total:
-        total[i] = np.array(total[i])
+        # meshes = [meshes]
+        total = meshes
+    else:
+        total = {0: []}
+        for mesh in meshes:
+            for i in mesh:
+                if i == 0:
+                    pos = mesh[i]
+                else:
+                    if i not in total:
+                        total[i] = []
+                    total[i] += list(mesh[i] + len(total[0]))
+            total[0] += list(pos)
+        for i in total:
+            total[i] = np.array(total[i])
+    if cache:
+        base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', mesh_name)[0]
+        if ext_name in ['node', 'ele']:
+            name = f'{base_name}.node {base_name}.ele'
+        else:
+            name = meshes
+        result = subprocess.run(f'cat {name} | sha256sum', shell=True, capture_output=True)
+        sha = re.findall(r'\S+', result.stdout.decode('utf-8'))[0]
+        cache_name = f'{sha}_{patch_size}'
+        cache_path = path.expanduser(f'~/.patcher_cache/{cache_name}')
+        if path.exists(cache_path):
+            return load_meta(cache_path)
+    if isinstance(total, str):
+        total = load_mesh(total)
     m = meshpatcher.MeshPatcher(total)
-    c = cluster.Cluster(m.get_relation(m.n_order - 1, m.n_order - 1), patch_size)
-    c.run()
-    m.patch(c)
+    m.patch(patch_size)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
+    if cache:
+        if not path.exists(cache_path):
+            cache_folder = path.expanduser(f'~/.patcher_cache')
+            subprocess.run(f'mkdir -p {cache_folder}', shell=True)
+            m.write(cache_path)
     return meta
+
+def load_meta(filename):
+    assert path.exists(filename)
+    m = meshpatcher.MeshPatcher()
+    m.read(filename)
+    meta = m.get_meta([])
+    meta = ti.Mesh.generate_meta(meta)
+    return meta
+
+def save_meta(filename, meta):
+    meta.patcher.write(filename)
 
 def patched_mesh(filename):
     mesh = ti.TetMesh()

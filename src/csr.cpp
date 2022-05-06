@@ -71,6 +71,25 @@ Csr Csr::mul(Csr &b) {
     return Csr(off_new, val_new);
 }
 
+Csr Csr::mul_unique(Csr &b) {
+    using namespace std;
+    vector<int> off_new, val_new;
+    off_new.push_back(0);
+    for (int u = 0; u < size(); u++) {
+        unordered_set<int> s;
+        for (auto v: (*this)[u]) {
+            for (auto w: b[v]) {
+                if (s.find(w) == s.end()) {
+                    val_new.push_back(w);
+                    s.insert(w);
+                }
+            }
+        }
+        off_new.push_back(val_new.size());
+    }
+    return Csr(off_new, val_new);
+}
+
 Csr Csr::remove_self_loop() {
     using namespace std;
     vector<int> off_new, val_new;
