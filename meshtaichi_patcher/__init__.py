@@ -48,7 +48,6 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
             total[0] += list(pos)
         for i in total:
             total[i] = np.array(total[i])
-    m = None
     if cache:
         base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', mesh_name)[0]
         if ext_name in ['node', 'ele']:
@@ -60,12 +59,10 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
         cache_name = f'{sha}_{patch_size}'
         cache_path = path.expanduser(f'~/.patcher_cache/{cache_name}')
         if path.exists(cache_path):
-            m = meshpatcher.MeshPatcher()
-            m.read(cache_path)
-    if m == None:
-        if isinstance(total, str):
-            total = load_mesh(total)
-        m = meshpatcher.MeshPatcher(total)
+            return load_meta(cache_path)
+    if isinstance(total, str):
+        total = load_mesh(total)
+    m = meshpatcher.MeshPatcher(total)
     m.patch(patch_size)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
@@ -75,6 +72,17 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
             subprocess.run(f'mkdir -p {cache_folder}', shell=True)
             m.write(cache_path)
     return meta
+
+def load_meta(filename):
+    assert path.exists(filename)
+    m = meshpatcher.MeshPatcher()
+    m.read(filename)
+    meta = m.get_meta([])
+    meta = ti.Mesh.generate_meta(meta)
+    return meta
+
+def save_meta(filename, meta):
+    meta.patcher.write(filename)
 
 def patched_mesh(filename):
     mesh = ti.TetMesh()
