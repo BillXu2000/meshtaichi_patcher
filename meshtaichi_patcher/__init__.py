@@ -59,7 +59,7 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
         cache_name = f'{sha}_{patch_size}'
         cache_path = path.expanduser(f'~/.patcher_cache/{cache_name}')
         if path.exists(cache_path):
-            return load_meta(cache_path)
+            return load_meta(cache_path, relations)
     if isinstance(total, str):
         total = load_mesh(total)
     m = meshpatcher.MeshPatcher(total)
@@ -73,11 +73,11 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False):
             m.write(cache_path)
     return meta
 
-def load_meta(filename):
+def load_meta(filename, relations=[]):
     assert path.exists(filename)
     m = meshpatcher.MeshPatcher()
     m.read(filename)
-    meta = m.get_meta([])
+    meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
     return meta
 
