@@ -4,6 +4,12 @@
 #include <set>
 
 Csr Cluster::run(Csr &graph) {
+    if (option == "kmeans") return run_kmeans(graph);
+    if (option == "greedy") return run_greedy(graph);
+    assert(false);
+}
+
+Csr Cluster::run_kmeans(Csr &graph) {
     using namespace std;
     assert(patch_size != -1); // patch_size has to be set before run cluster
     int n = graph.size();

@@ -9,6 +9,8 @@ struct Patcher {
     std::map<std::array<int, 2>, std::vector<int>> patch_offset;
     int n_order, patch_size = -1;
     pybind11::array_t<float> position;
+    
+    std::string cluster_option;
 
     Patcher() {}
     int get_size(int order);

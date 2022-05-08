@@ -174,6 +174,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def(py::init<>())
         .def_readwrite("n_order", &Patcher::n_order)
         .def_readwrite("patch_size", &Patcher::patch_size)
+        .def_readwrite("cluster_option", &Patcher::cluster_option)
         .def("get_size", &Patcher::get_size)
         .def("set_relation", &Patcher::set_relation)
         .def("get_relation", &Patcher::get_relation)

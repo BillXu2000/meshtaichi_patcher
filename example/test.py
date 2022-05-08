@@ -2,7 +2,8 @@ import taichi as ti
 import meshtaichi_patcher, pymeshlab
 
 # obj_name = "/media/hdd/model/scale/bunny/bunny0.obj"
-obj_name = "/media/hdd/model/scale/bunny/bunny0.1.node"
+# obj_name = "/media/hdd/model/scale/bunny/bunny0.1.node"
+obj_name = "/home/bx2k/models/bunny/bunny0.obj"
 
 ti.init()
 

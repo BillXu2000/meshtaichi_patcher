@@ -99,6 +99,7 @@ void Patcher::patch() {
     auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
+    cluster.option = cluster_option;
     auto patch = cluster.run_greedy(rel_cluster);
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
