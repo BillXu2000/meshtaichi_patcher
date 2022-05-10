@@ -6,6 +6,7 @@
 Csr Cluster::run(Csr &graph) {
     if (option == "kmeans") return run_kmeans(graph);
     if (option == "greedy") return run_greedy(graph);
+    std::cerr << option << ": option not valid!\n";
     assert(false);
 }
 
@@ -170,6 +171,7 @@ Csr Cluster::run_greedy(Csr &graph) {
             connect[i] = 0;
             visited[i] = false;
         }
+        total.insert(seed);
         while (!neighbors.empty()) {
             int u = neighbors.top()[1], k = neighbors.top()[0];
             neighbors.pop();
@@ -195,9 +197,32 @@ Csr Cluster::run_greedy(Csr &graph) {
         }
         color_n++;
     }
+    map<int, unordered_set<int> > totals;
+    for (int u = 0; u < n; u++) {
+        totals[color[u]].insert(u);
+        for (auto v: graph[u]) {
+            totals[color[u]].insert(v);
+        }
+    }
+    typedef array<int, 2> int2;
+    set<int2> colors;
+    for (auto i: totals) {
+        colors.insert({-int(i.second.size()), i.first});
+    }
+    map<int, int> color_map;
+    for (int c = 0; !colors.empty(); c++) {
+        int sum = 0;
+        while(!colors.empty()) {
+            auto i = colors.lower_bound({sum - patch_size, 0});
+            if (i == colors.end()) break;
+            sum -= (*i)[0];
+            color_map[(*i)[1]] = c;
+            colors.erase(i);
+        }
+    }
     vector<array<int, 2> > pairs;
     for (int u = 0; u < n; u++) {
-        pairs.push_back({color[u], u});
+        pairs.push_back({color_map[color[u]], u});
     }
     return Csr(pairs);
 }

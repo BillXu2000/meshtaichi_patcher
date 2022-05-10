@@ -11,6 +11,7 @@ struct Patcher {
     pybind11::array_t<float> position;
     
     std::string cluster_option;
+    std::string only_relation;
 
     Patcher() {}
     int get_size(int order);

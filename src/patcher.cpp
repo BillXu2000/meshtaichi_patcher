@@ -100,7 +100,7 @@ void Patcher::patch() {
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
     cluster.option = cluster_option;
-    auto patch = cluster.run_greedy(rel_cluster);
+    auto patch = cluster.run(rel_cluster);
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
@@ -131,12 +131,41 @@ void Patcher::patch() {
                 s[u] = p;
                 val_new.push_back(u);
             }
-            for (auto v: verts[p]) {
-                auto &rel = get_relation(0, order);
-                for (auto w: rel[v]) {
-                    if (s[w] < p) {
-                        s[w] = p;
-                        val_new.push_back(w);
+            auto add = [&](int w) {
+                if (s[w] < p) {
+                    s[w] = p;
+                    val_new.push_back(w);
+                }
+            };
+            auto char2order = [](char c) {
+                if (c == 'v') return 0;
+                if (c == 'e') return 1;
+                if (c == 'f') return 2;
+                if (c == 'c') return 3;
+                return -1;
+            };
+            if (only_relation == "") {
+                for (auto v: verts[p]) {
+                    auto &rel = get_relation(0, order);
+                    for (auto w: rel[v]) {
+                        add(w);
+                    }
+                }
+            }
+            else {
+                for (auto u: patch[p]) {
+                    auto &rel = get_relation(n_order - 1, order);
+                    for (auto v: rel[u]) {
+                        add(v);
+                    }
+                }
+                if (char2order(only_relation[1]) == order) {
+                    int from = char2order(only_relation[0]);
+                    for (auto u: owned[from][p]) {
+                        auto &rel = get_relation(from, order);
+                        for (auto v: rel[u]) {
+                            add(v);
+                        }
                     }
                 }
             }

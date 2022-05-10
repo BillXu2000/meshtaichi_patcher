@@ -45,11 +45,12 @@ class MeshPatcher:
     def get_relation(self, from_end, to_end):
         return Relation(self.patcher.get_relation(from_end, to_end))
     
-    def patch(self, patch_size, cluster_option):
+    def patch(self, max_order):
         if self.patched: return
         self.patcher.generate_elements()
-        self.patcher.patch_size = patch_size
-        self.patcher.cluster_option = cluster_option
+        if max_order != -1:
+            self.patcher.n_order = max_order
+            self.n_order = max_order
         self.patcher.patch()
         self.patched = True
     
@@ -110,7 +111,7 @@ class MeshPatcher:
     def face_matrix(self):
         return self.face
     
-    def stats(self):
+    def stats(self, filename):
         # order = self.n_order - 1
         fig, axs = plt.subplots(nrows=3, ncols=self.n_order, figsize=(4 * self.n_order, 10))
         for order in range(self.n_order):
@@ -125,4 +126,5 @@ class MeshPatcher:
             axs[2, order].set_title("ribbon rates")
             
         # plt.show()
-        plt.savefig('/home/bx2k/transport/patcher.svg')
+        # plt.savefig('/home/bx2k/transport/patcher.svg')
+        plt.savefig(filename)

@@ -38,13 +38,13 @@ def ra():
             sum += i.verts[j].id
         #     print(i.id, i.verts[j].id)
     print(sum)
-    sum = 0
+    sum_f = 0.0
     for i in bunny.verts:
         # print(i.id, i.verts.size)
         for j in range(i.verts.size):
-            sum += i.verts[j].x.norm()
+            sum_f += i.verts[j].x.norm()
         #     print(i.id, i.verts[j].id)
-    print(sum)
+    print(sum_f)
 ra()
 
 # meta.patcher.export_obj()
