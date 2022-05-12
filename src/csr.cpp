@@ -21,6 +21,14 @@ Csr::Csr(std::vector<std::array<int, 2>> pairs) {
 
 Csr::Range::Range(int* _b, int* _e): b(_b), e(_e) {}
 
+Csr Csr::from_color(std::vector<int> &c) {
+    std::vector<std::array<int, 2> > pairs;
+    for (int u = 0; u < c.size(); u++) {
+        pairs.push_back({c[u], u});
+    }
+    return Csr(pairs);
+}
+
 int* Csr::Range::begin() {
     return b;
 }

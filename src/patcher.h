@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <set>
 #include "csr.h"
 #include "cluster.h"
 
@@ -9,6 +10,9 @@ struct Patcher {
     std::map<std::array<int, 2>, std::vector<int>> patch_offset;
     int n_order, patch_size = -1;
     pybind11::array_t<float> position;
+    std::set<std::array<int, 2>> patch_relation;
+    
+    std::string cluster_option;
 
     Patcher() {}
     int get_size(int order);
@@ -27,4 +31,6 @@ struct Patcher {
 
     void set_pos(pybind11::array_t<float>);
     pybind11::array_t<float> get_pos();
+
+    void add_patch_relation(int u, int v);
 };

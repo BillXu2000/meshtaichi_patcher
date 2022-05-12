@@ -99,7 +99,8 @@ void Patcher::patch() {
     auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
-    auto patch = cluster.run_greedy(rel_cluster);
+    cluster.option = cluster_option;
+    auto patch = cluster.run(rel_cluster);
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
@@ -118,7 +119,7 @@ void Patcher::patch() {
     }
     owned[n_order - 1] = patch;
     Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
-    for (int order = 0; order < n_order; order++) {
+    for (int order = n_order - 1; order >= 0; order--) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
         vector<int> s(get_size(order));
@@ -130,12 +131,50 @@ void Patcher::patch() {
                 s[u] = p;
                 val_new.push_back(u);
             }
-            for (auto v: verts[p]) {
-                auto &rel = get_relation(0, order);
-                for (auto w: rel[v]) {
-                    if (s[w] < p) {
-                        s[w] = p;
-                        val_new.push_back(w);
+            auto add = [&](int w) {
+                if (s[w] < p) {
+                    s[w] = p;
+                    val_new.push_back(w);
+                }
+            };
+            auto char2order = [](char c) {
+                if (c == 'v') return 0;
+                if (c == 'e') return 1;
+                if (c == 'f') return 2;
+                if (c == 'c') return 3;
+                return -1;
+            };
+            if (false) { // use optimized ribbon now
+                for (auto v: verts[p]) {
+                    auto &rel = get_relation(0, order);
+                    for (auto w: rel[v]) {
+                        add(w);
+                    }
+                }
+            }
+            else {
+                for (auto u: patch[p]) {
+                    auto &rel = get_relation(n_order - 1, order);
+                    for (auto v: rel[u]) {
+                        add(v);
+                    }
+                }
+                for (auto i: patch_relation) {
+                    if (i[1] != order) continue;
+                    auto &rel = get_relation(i[0], i[1]);
+                    if (i[0] <= i[1]) {
+                        for (auto u: owned[i[0]][p]) {
+                            for (auto v: rel[u]) {
+                                add(v);
+                            }
+                        }
+                    }
+                    else {
+                        for (auto u: total[i[0]][p]) {
+                            for (auto v: rel[u]) {
+                                add(v);
+                            }
+                        }
                     }
                 }
             }
@@ -345,4 +384,8 @@ void Patcher::set_pos(pybind11::array_t<float> arr) {
 
 pybind11::array_t<float> Patcher::get_pos() {
     return position;
+}
+
+void Patcher::add_patch_relation(int u, int v) {
+    patch_relation.insert({u, v});
 }
