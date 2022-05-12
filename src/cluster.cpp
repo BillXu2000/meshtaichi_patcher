@@ -6,8 +6,224 @@
 Csr Cluster::run(Csr &graph) {
     if (option == "kmeans") return run_kmeans(graph);
     if (option == "greedy") return run_greedy(graph);
+    if (option == "unbound") return run_unbound(graph);
     std::cerr << option << ": option not valid!\n";
     assert(false);
+    return Csr();
+}
+
+Csr Cluster::run_unbound(Csr &graph) {
+    using namespace std;
+    typedef array<int, 2> int2;
+    assert(patch_size != -1); // patch_size has to be set before run cluster
+    int n = graph.size();
+    vector<int> seeds, color;
+    color.resize(n);
+    for (auto &i: color) {
+        i = 0;
+    }
+    for (int u = 0; u < n; u++) {
+        if (color[u] == 0) {
+            queue<int> q;
+            vector<int> con;
+            q.push(u);
+            color[u] = 1;
+            while (!q.empty()) {
+                int u = q.front();
+                q.pop();
+                con.push_back(u);
+                for (auto v : graph[u]) {
+                    if (color[v] == 0) {
+                        color[v] = 1;
+                        q.push(v);
+                    }
+                }
+            }
+            random_shuffle(con.begin(), con.end());
+            seeds.insert(seeds.end(), con.begin(), con.begin() + con.size() / patch_size + 1);
+        }
+    }
+
+    vector<bool> locked(n);
+    color.resize(n);
+    for (auto &i: color) {
+        i = -1;
+    }
+    for (int i = 0; i < n; i++) {
+        locked[i] = false;
+    }
+    Csr owned_out;
+    for (int round = 1; true; round++) {
+        // coloring
+        queue<int> q;
+        set<int> uni;
+        for (int i = 0; i < seeds.size(); i++) {
+            int u = seeds[i];
+            if (color[u] == -1) {
+                color[u] = i;
+                q.push(u);
+            }
+            uni.insert(u);
+        }
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            for (auto v : graph[u]) {
+                if (color[v] == -1) {
+                    color[v] = color[u];
+                    q.push(v);
+                }
+            }
+        }
+        vector<array<int, 2> > pairs;
+        for (int u = 0; u < n; u++) {
+            pairs.push_back({color[u], u});
+        }
+        auto owned = Csr(pairs);
+        if (round == 20) {
+            owned_out = owned;
+            break;
+        }
+        std::vector<bool> visit(n);
+        for (int i = 0; i < n; i++) {
+            visit[i] = false;
+        }
+        for (int p = 0; p < seeds.size(); p++) {
+            queue<int> q;
+            for (auto u: owned[p]) {
+                for (auto v: graph[u]) {
+                    if (color[u] != color[v]) {
+                        visit[u] = true;
+                        q.push(u);
+                        break;
+                    }
+                }
+            }
+            int last = seeds[p];
+            while (!q.empty()) {
+                int u = q.front();
+                last = u;
+                q.pop();
+                for (auto v : graph[u]) {
+                    if (color[v] == p && !visit[v]) {
+                        visit[v] = true;
+                        q.push(v);
+                    }
+                }
+            }
+            seeds[p] = last;
+        }
+    }
+    auto &owned = owned_out;
+    for (int i = 0; i < owned.size(); i++) {
+        priority_queue<int2> neighbors;
+        vector<int> connect(n);
+        vector<bool> visited(n);
+        unordered_set<int> total;
+        for (int i = 0; i < n; i++) {
+            connect[i] = 0;
+            visited[i] = false;
+        }
+        for (int u = 0; u < n; u++) {
+            if (color[u] != i) continue;
+            total.insert(u);
+            for (auto v: graph[u]) {
+                total.insert(v);
+                connect[v]++;
+                neighbors.push({connect[v], v});
+            }
+        }
+        if (total.size() > patch_size) continue;
+        while (!neighbors.empty()) {
+            int u = neighbors.top()[1], k = neighbors.top()[0];
+            neighbors.pop();
+            if (color[u] == i || visited[u]) continue;
+            visited[u] = true;
+            int sum = total.size();
+            for (auto v: graph[u]) {
+                if (total.find(v) == total.end()) {
+                    sum++;
+                    if (sum > patch_size) break;
+                }
+            }
+            if (sum > patch_size) continue;
+            color[u] = i;
+            for (auto v: graph[u]) {
+                total.insert(v);
+                connect[v]++;
+                neighbors.push({connect[v], v});
+            }
+        }
+    }
+    {
+        vector<array<int, 2> > pairs;
+        for (int u = 0; u < n; u++) {
+            pairs.push_back({color[u], u});
+        }
+        owned = Csr(pairs);
+    }
+    {
+        int color_n = owned.size();
+        vector<int> connect(n);
+        for (int i = 0; i < owned.size(); i++) {
+            int c = -1;
+            for (auto u: owned[i]) {
+                color[u] = -1;
+            }
+            while (true) {
+                priority_queue<int2> neighbors;
+                for (auto u: owned[i]) {
+                    if (color[u] < 0) {
+                        neighbors.push({0, u});
+                        color[u] = -1;
+                        connect[u] = 0;
+                    }
+                }
+                if (neighbors.empty()) {
+                    break;
+                }
+                if (c == -1) {
+                    c = i;
+                }
+                else {
+                    c = color_n;
+                    color_n++;
+                }
+                unordered_set<int> total;
+                while (!neighbors.empty()) {
+                    int u = neighbors.top()[1], k = neighbors.top()[0];
+                    neighbors.pop();
+                    if (color[u] != -1) continue;
+                    int sum = total.size();
+                    for (auto v: graph[u]) {
+                        if (total.find(v) == total.end()) {
+                            sum++;
+                            if (sum > patch_size) break;
+                        }
+                    }
+                    if (sum > patch_size) {
+                        color[u] = -2; // not appear again in this patch
+                        continue;
+                    }
+                    color[u] = c;
+                    for (auto v: graph[u]) {
+                        total.insert(v);
+                        if (color[v] == -1) {
+                            connect[v]++;
+                            neighbors.push({connect[v], v});
+                        }
+                    }
+                }
+            }
+        }
+    }
+    {
+        vector<array<int, 2> > pairs;
+        for (int u = 0; u < n; u++) {
+            pairs.push_back({color[u], u});
+        }
+        return Csr(pairs);
+    }
 }
 
 Csr Cluster::run_kmeans(Csr &graph) {
@@ -197,6 +413,45 @@ Csr Cluster::run_greedy(Csr &graph) {
         }
         color_n++;
     }
+    // for (int i = 0; i < color_n; i++) {
+    //     priority_queue<int2> neighbors;
+    //     vector<int> connect(n);
+    //     vector<bool> visited(n);
+    //     unordered_set<int> total;
+    //     for (int i = 0; i < n; i++) {
+    //         connect[i] = 0;
+    //         visited[i] = false;
+    //     }
+    //     for (int u = 0; u < n; u++) {
+    //         if (color[u] != i) continue;
+    //         total.insert(u);
+    //         for (auto v: graph[u]) {
+    //             total.insert(v);
+    //             connect[v]++;
+    //             neighbors.push({connect[v], v});
+    //         }
+    //     }
+    //     while (!neighbors.empty()) {
+    //         int u = neighbors.top()[1], k = neighbors.top()[0];
+    //         neighbors.pop();
+    //         if (color[u] == i || visited[u]) continue;
+    //         visited[u] = true;
+    //         int sum = total.size();
+    //         for (auto v: graph[u]) {
+    //             if (total.find(v) == total.end()) {
+    //                 sum++;
+    //                 if (sum > patch_size) break;
+    //             }
+    //         }
+    //         if (sum > patch_size) continue;
+    //         color[u] = i;
+    //         for (auto v: graph[u]) {
+    //             total.insert(v);
+    //             connect[v]++;
+    //             neighbors.push({connect[v], v});
+    //         }
+    //     }
+    // }
     map<int, unordered_set<int> > totals;
     for (int u = 0; u < n; u++) {
         totals[color[u]].insert(u);

@@ -45,12 +45,20 @@ class MeshPatcher:
     def get_relation(self, from_end, to_end):
         return Relation(self.patcher.get_relation(from_end, to_end))
     
-    def patch(self, max_order):
+    def patch(self, max_order, patch_relation):
         if self.patched: return
         self.patcher.generate_elements()
         if max_order != -1:
             self.patcher.n_order = max_order
             self.n_order = max_order
+        if patch_relation == 'all':
+            for i in range(self.n_order):
+                for j in range(self.n_order):
+                    self.patcher.add_patch_relation(i, j)
+        else:
+            c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
+            for relation in patch_relation:
+                self.patcher.add_patch_relation(c2i[relation[0]], c2i[relation[1]])
         self.patcher.patch()
         self.patched = True
     
@@ -121,10 +129,14 @@ class MeshPatcher:
             axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
             axs[1, order].set_title(f"total, order = {order}")
             axs[1, order].set_ylim(bottom=0)
-            axs[2, order].bar(0, self.owned[order].total_size() / self.total[order].total_size(), label='ribbon rate')
+            rate = self.owned[order].total_size() / self.total[order].total_size()
+            axs[2, order].bar(0, rate, label='ribbon rate')
             axs[2, order].set_ylim(top=1)
-            axs[2, order].set_title("ribbon rates")
+            axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
             
         # plt.show()
         # plt.savefig('/home/bx2k/transport/patcher.svg')
         plt.savefig(filename)
+    
+    def get_owned_rate(self, order):
+        return self.owned[order].total_size() / self.total[order].total_size()

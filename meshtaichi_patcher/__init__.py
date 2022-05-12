@@ -29,7 +29,7 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option="greedy", only_relation="", max_order=-1):
+def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option="greedy", max_order=-1, refresh_cache=False, patch_relation="all"):
     if isinstance(meshes, str):
         mesh_name = meshes
     if not isinstance(meshes, list):
@@ -56,18 +56,17 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option=
             name = meshes
         result = subprocess.run(f'cat {name} | sha256sum', shell=True, capture_output=True)
         sha = re.findall(r'\S+', result.stdout.decode('utf-8'))[0]
-        cache_name = f'{sha}_{patch_size}_{cluster_option}_{only_relation}_{max_order}'
+        cache_name = f'{sha}_{patch_size}_{cluster_option}_{max_order}_{"".join(patch_relation)}'
         cache_sha = hashlib.sha256(cache_name.encode('utf-8')).hexdigest()
         cache_path = path.expanduser(f'~/.patcher_cache/{cache_sha}')
-        if path.exists(cache_path):
+        if path.exists(cache_path) and not refresh_cache:
             return load_meta(cache_path, relations)
     if isinstance(total, str):
         total = load_mesh(total)
     m = meshpatcher.MeshPatcher(total)
     m.patcher.patch_size = patch_size
     m.patcher.cluster_option = cluster_option
-    m.patcher.only_relation = only_relation
-    m.patch(max_order)
+    m.patch(max_order, patch_relation)
     meta = m.get_meta(relations)
     meta = ti.Mesh.generate_meta(meta)
     if cache:

@@ -119,7 +119,7 @@ void Patcher::patch() {
     }
     owned[n_order - 1] = patch;
     Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
-    for (int order = 0; order < n_order; order++) {
+    for (int order = n_order - 1; order >= 0; order--) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
         vector<int> s(get_size(order));
@@ -144,7 +144,7 @@ void Patcher::patch() {
                 if (c == 'c') return 3;
                 return -1;
             };
-            if (only_relation == "") {
+            if (false) { // use optimized ribbon now
                 for (auto v: verts[p]) {
                     auto &rel = get_relation(0, order);
                     for (auto w: rel[v]) {
@@ -159,12 +159,21 @@ void Patcher::patch() {
                         add(v);
                     }
                 }
-                if (char2order(only_relation[1]) == order) {
-                    int from = char2order(only_relation[0]);
-                    for (auto u: owned[from][p]) {
-                        auto &rel = get_relation(from, order);
-                        for (auto v: rel[u]) {
-                            add(v);
+                for (auto i: patch_relation) {
+                    if (i[1] != order) continue;
+                    auto &rel = get_relation(i[0], i[1]);
+                    if (i[0] <= i[1]) {
+                        for (auto u: owned[i[0]][p]) {
+                            for (auto v: rel[u]) {
+                                add(v);
+                            }
+                        }
+                    }
+                    else {
+                        for (auto u: total[i[0]][p]) {
+                            for (auto v: rel[u]) {
+                                add(v);
+                            }
                         }
                     }
                 }
@@ -375,4 +384,8 @@ void Patcher::set_pos(pybind11::array_t<float> arr) {
 
 pybind11::array_t<float> Patcher::get_pos() {
     return position;
+}
+
+void Patcher::add_patch_relation(int u, int v) {
+    patch_relation.insert({u, v});
 }

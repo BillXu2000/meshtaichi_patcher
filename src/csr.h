@@ -18,6 +18,7 @@ struct Csr {
 
     Csr() {}
 
+    static Csr from_color(std::vector<int>&);
 
     struct Range {
         int *b, *e;

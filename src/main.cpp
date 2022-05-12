@@ -175,7 +175,6 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def_readwrite("n_order", &Patcher::n_order)
         .def_readwrite("patch_size", &Patcher::patch_size)
         .def_readwrite("cluster_option", &Patcher::cluster_option)
-        .def_readwrite("only_relation", &Patcher::only_relation)
         .def("get_size", &Patcher::get_size)
         .def("set_relation", &Patcher::set_relation)
         .def("get_relation", &Patcher::get_relation)
@@ -190,6 +189,8 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("get_face", &Patcher::get_face)
         .def("set_pos", &Patcher::set_pos)
         .def("get_pos", &Patcher::get_pos)
+
+        .def("add_patch_relation", &Patcher::add_patch_relation)
         ;
 
 }
