@@ -10,4 +10,6 @@ struct Cluster {
     Csr run_greedy(Csr &graph);
     Csr run_kmeans(Csr &graph);
     Csr run_unbound(Csr &graph);
+
+    Csr color2ans(std::vector<int>&, Csr&);
 };

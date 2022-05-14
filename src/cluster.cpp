@@ -12,6 +12,39 @@ Csr Cluster::run(Csr &graph) {
     return Csr();
 }
 
+Csr Cluster::color2ans(std::vector<int> &color, Csr &graph) {
+    using namespace std;
+    int n = color.size();
+    map<int, unordered_set<int> > totals;
+    for (int u = 0; u < n; u++) {
+        totals[color[u]].insert(u);
+        for (auto v: graph[u]) {
+            totals[color[u]].insert(v);
+        }
+    }
+    typedef array<int, 2> int2;
+    set<int2> colors;
+    for (auto i: totals) {
+        colors.insert({-int(i.second.size()), i.first});
+    }
+    map<int, int> color_map;
+    for (int c = 0; !colors.empty(); c++) {
+        int sum = 0;
+        while(!colors.empty()) {
+            auto i = colors.lower_bound({sum - patch_size, 0});
+            if (i == colors.end()) break;
+            sum -= (*i)[0];
+            color_map[(*i)[1]] = c;
+            colors.erase(i);
+        }
+    }
+    vector<array<int, 2> > pairs;
+    for (int u = 0; u < n; u++) {
+        pairs.push_back({color_map[color[u]], u});
+    }
+    return Csr(pairs);
+}
+
 Csr Cluster::run_unbound(Csr &graph) {
     using namespace std;
     typedef array<int, 2> int2;
@@ -265,7 +298,7 @@ Csr Cluster::run_kmeans(Csr &graph) {
     for (int i = 0; i < n; i++) {
         locked[i] = false;
     }
-    int round_n = 1;
+    int round_n = 5;
     for (int round = 1; true; round++) {
         // coloring
         queue<int> q;
@@ -300,7 +333,8 @@ Csr Cluster::run_kmeans(Csr &graph) {
             ma = max(ma, total[u].size());
             if (total[u].size() > patch_size) cnt++;
         }
-        if (ma <= patch_size) return owned;
+        printf("cnt = %d\n", cnt);
+        if (ma <= patch_size) break;
 
         // update seeds
         std::vector<bool> visit(n);
@@ -309,7 +343,7 @@ Csr Cluster::run_kmeans(Csr &graph) {
         }
         for (int p = 0; p < owned.size(); p++) {
             // if (total[p].size() <= patch_size) continue;
-            if (round % round_n == 0 && total[p].size() <= patch_size) {
+            if (cnt < patch_size / 5 && round % round_n == 0 && total[p].size() <= patch_size) {
                 locked[p] = true;
             }
             if (locked[p]) continue;
@@ -357,6 +391,67 @@ Csr Cluster::run_kmeans(Csr &graph) {
             // }
         }
     }
+    if (false) {// greedy after kmeans
+        vector<array<int, 2> > pairs;
+        for (int u = 0; u < n; u++) {
+            pairs.push_back({color[u], u});
+        }
+        auto owned = Csr(pairs);
+        auto total_tmp = owned.mul_unique(graph);
+        vector<array<int, 2>> patches;
+        for (int i = 0; i < total_tmp.size(); i++) {
+            patches.push_back({total_tmp[i].size(), i});
+        }
+        sort(patches.begin(), patches.end());
+        vector<bool> colored(n);
+        for (int i = 0; i < n; i++) {
+            colored[i] = false;
+        }
+        typedef array<int, 2> int2;
+        for (auto p: patches) {
+            int i = p[1];
+            priority_queue<int2> neighbors;
+            vector<int> connect(n);
+            vector<bool> visited(n);
+            unordered_set<int> total;
+            for (int i = 0; i < n; i++) {
+                connect[i] = 0;
+                visited[i] = false;
+            }
+            for (int u = 0; u < n; u++) {
+                if (color[u] != i) continue;
+                total.insert(u);
+                colored[u] = true;
+                for (auto v: graph[u]) {
+                    total.insert(v);
+                    connect[v]++;
+                    neighbors.push({connect[v], v});
+                }
+            }
+            while (!neighbors.empty()) {
+                int u = neighbors.top()[1], k = neighbors.top()[0];
+                neighbors.pop();
+                if (color[u] == i || visited[u] || colored[u]) continue;
+                visited[u] = true;
+                int sum = total.size();
+                for (auto v: graph[u]) {
+                    if (total.find(v) == total.end()) {
+                        sum++;
+                        if (sum > patch_size) break;
+                    }
+                }
+                if (sum > patch_size) continue;
+                color[u] = i;
+                colored[u] = true;
+                for (auto v: graph[u]) {
+                    total.insert(v);
+                    connect[v]++;
+                    neighbors.push({connect[v], v});
+                }
+            }
+        }
+    }
+    return color2ans(color, graph);
 }
 
 Csr Cluster::run_greedy(Csr &graph) {
@@ -369,7 +464,8 @@ Csr Cluster::run_greedy(Csr &graph) {
     vector<int> color(n), degree(n);
     for (int i = 0; i < n; i++) {
         color[i] = -1;
-        degree[i] = graph[i].size();
+        // degree[i] = graph[i].size();
+        degree[i] = 0;
         seeds.push({degree[i], i});
     }
     int color_n = 0;
@@ -406,7 +502,8 @@ Csr Cluster::run_greedy(Csr &graph) {
                 if (color[v] == -1) {
                     connect[v]++;
                     neighbors.push({connect[v], v});
-                    degree[v]--;
+                    // degree[v]--;
+                    degree[v]++;
                     seeds.push({degree[v], v});
                 }
             }
@@ -452,32 +549,5 @@ Csr Cluster::run_greedy(Csr &graph) {
     //         }
     //     }
     // }
-    map<int, unordered_set<int> > totals;
-    for (int u = 0; u < n; u++) {
-        totals[color[u]].insert(u);
-        for (auto v: graph[u]) {
-            totals[color[u]].insert(v);
-        }
-    }
-    typedef array<int, 2> int2;
-    set<int2> colors;
-    for (auto i: totals) {
-        colors.insert({-int(i.second.size()), i.first});
-    }
-    map<int, int> color_map;
-    for (int c = 0; !colors.empty(); c++) {
-        int sum = 0;
-        while(!colors.empty()) {
-            auto i = colors.lower_bound({sum - patch_size, 0});
-            if (i == colors.end()) break;
-            sum -= (*i)[0];
-            color_map[(*i)[1]] = c;
-            colors.erase(i);
-        }
-    }
-    vector<array<int, 2> > pairs;
-    for (int u = 0; u < n; u++) {
-        pairs.push_back({color_map[color[u]], u});
-    }
-    return Csr(pairs);
+    return color2ans(color, graph);
 }

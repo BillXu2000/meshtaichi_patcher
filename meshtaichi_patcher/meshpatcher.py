@@ -1,6 +1,6 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
-import numpy as np, pymeshlab
+import numpy as np, pymeshlab, random
 import matplotlib.pyplot as plt
 
 class MeshPatcher:
@@ -112,8 +112,14 @@ class MeshPatcher:
     def export_obj(self, filename, vm=None):
         if vm == None:
             vm = self.position
+        vert_colors = np.zeros([self.get_size(0), 4])
+        for p in self.owned[0]:
+            color = [random.random() for i in range(3)]
+            color += [1]
+            for u in p:
+                vert_colors[u] = color
         ms = pymeshlab.MeshSet()
-        ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
+        ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, v_color_matrix=vert_colors))
         ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
     
     def face_matrix(self):
@@ -121,18 +127,22 @@ class MeshPatcher:
     
     def stats(self, filename):
         # order = self.n_order - 1
-        fig, axs = plt.subplots(nrows=3, ncols=self.n_order, figsize=(4 * self.n_order, 10))
+        fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 8))
         for order in range(self.n_order):
-            axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
-            axs[0, order].set_title(f"owned, order = {order}")
-            axs[0, order].set_ylim(bottom=0)
-            axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
-            axs[1, order].set_title(f"total, order = {order}")
-            axs[1, order].set_ylim(bottom=0)
             rate = self.owned[order].total_size() / self.total[order].total_size()
-            axs[2, order].bar(0, rate, label='ribbon rate')
-            axs[2, order].set_ylim(top=1)
-            axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
+            # axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
+            tmp_total = [len(i) for i in self.total[order]]
+            rg = [0, max(tmp_total)]
+            axs[0, order].hist([len(i) for i in self.owned[order]], range=rg)
+            axs[0, order].set_title(f"owned, order = {order}")
+            # axs[0, order].set_ylim(bottom=0)
+            # axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
+            axs[1, order].hist(tmp_total, range=rg)
+            axs[1, order].set_title(f"total, owned rate = {'%.2f' % rate}")
+            # axs[1, order].set_ylim(bottom=0)
+            # axs[2, order].bar(0, rate, label='ribbon rate')
+            # axs[2, order].set_ylim(top=1)
+            # axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
             
         # plt.show()
         # plt.savefig('/home/bx2k/transport/patcher.svg')
