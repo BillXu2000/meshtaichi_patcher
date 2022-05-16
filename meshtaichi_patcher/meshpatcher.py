@@ -109,9 +109,25 @@ class MeshPatcher:
         ans["patcher"] = self
         return ans
     
-    def export_obj(self, filename, vm=None):
-        if vm == None:
+    def export_obj(self, filename, vm=None, face=False, color=True, binary=False):
+        if vm is None:
             vm = self.position
+        if not color:
+            ms = pymeshlab.MeshSet()
+            ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
+            ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
+            return
+        if face: # export face color
+            face_colors = np.zeros([self.get_size(2), 4])
+            for p in self.owned[2]:
+                color = [random.random() for i in range(3)]
+                color += [1]
+                for u in p:
+                    face_colors[u] = color
+            ms = pymeshlab.MeshSet()
+            ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, f_color_matrix=face_colors))
+            ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
+            return
         vert_colors = np.zeros([self.get_size(0), 4])
         for p in self.owned[0]:
             color = [random.random() for i in range(3)]
@@ -120,7 +136,7 @@ class MeshPatcher:
                 vert_colors[u] = color
         ms = pymeshlab.MeshSet()
         ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, v_color_matrix=vert_colors))
-        ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
+        ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
     
     def face_matrix(self):
         return self.face
