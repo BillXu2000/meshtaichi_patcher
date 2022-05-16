@@ -106,13 +106,17 @@ class MeshPatcher:
                 relation = (c2i[relation[0]], c2i[relation[1]])
             ans["relations"].append(self.get_relation_meta(*relation))
         ans["attrs"] = {'x': self.position.reshape(-1).astype(np.float32)}
-        print(ans["attrs"])
         ans["patcher"] = self
         return ans
     
-    def export_obj(self, filename, vm=None, face=False):
-        if vm == None:
+    def export_obj(self, filename, vm=None, face=False, color=True, binary=False):
+        if vm is None:
             vm = self.position
+        if not color:
+            ms = pymeshlab.MeshSet()
+            ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))
+            ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
+            return
         if face: # export face color
             face_colors = np.zeros([self.get_size(2), 4])
             for p in self.owned[2]:
@@ -122,7 +126,7 @@ class MeshPatcher:
                     face_colors[u] = color
             ms = pymeshlab.MeshSet()
             ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, f_color_matrix=face_colors))
-            ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
+            ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
             return
         vert_colors = np.zeros([self.get_size(0), 4])
         for p in self.owned[0]:
@@ -132,7 +136,7 @@ class MeshPatcher:
                 vert_colors[u] = color
         ms = pymeshlab.MeshSet()
         ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, v_color_matrix=vert_colors))
-        ms.save_current_mesh(filename, binary=False, save_vertex_quality=False)
+        ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
     
     def face_matrix(self):
         return self.face
