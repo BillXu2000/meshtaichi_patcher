@@ -68,12 +68,12 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option=
     m.patcher.cluster_option = cluster_option
     m.patch(max_order, patch_relation)
     meta = m.get_meta(relations)
-    meta = ti.Mesh.generate_meta(meta)
     if cache:
         if not path.exists(cache_path):
             cache_folder = path.expanduser(f'~/.patcher_cache')
             subprocess.run(f'mkdir -p {cache_folder}', shell=True)
             m.write(cache_path)
+    meta = ti.Mesh.generate_meta(meta)
     return meta
 
 def load_meta(filename, relations=[]):

@@ -33,6 +33,7 @@ Csr Cluster::color2ans(std::vector<int> &color, Csr &graph) {
         while(!colors.empty()) {
             auto i = colors.lower_bound({sum - patch_size, 0});
             if (i == colors.end()) break;
+            if (sum == 0) sum += patch_size / 4;
             sum -= (*i)[0];
             color_map[(*i)[1]] = c;
             colors.erase(i);
