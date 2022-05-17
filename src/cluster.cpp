@@ -469,6 +469,11 @@ Csr Cluster::run_greedy(Csr &graph) {
         degree[i] = 0;
         seeds.push({degree[i], i});
     }
+    vector<int> connect(n), visited(n), connect_tag(n);
+    for (int i = 0; i < n; i++) {
+        connect_tag[i] = -1;
+        visited[i] = -1;
+    }
     int color_n = 0;
     // for (int seed = 0; seed < n; seed++) {
     while (!seeds.empty()) {
@@ -476,20 +481,14 @@ Csr Cluster::run_greedy(Csr &graph) {
         seeds.pop();
         if (color[seed] != -1) continue;
         priority_queue<int2> neighbors;
-        vector<int> connect(n);
-        vector<bool> visited(n);
         unordered_set<int> total;
         neighbors.push({0, seed});
-        for (int i = 0; i < n; i++) {
-            connect[i] = 0;
-            visited[i] = false;
-        }
         total.insert(seed);
         while (!neighbors.empty()) {
             int u = neighbors.top()[1], k = neighbors.top()[0];
             neighbors.pop();
-            if (color[u] == color_n || visited[u]) continue;
-            visited[u] = true;
+            if (color[u] == color_n || visited[u] == color_n) continue;
+            visited[u] = color_n;
             int sum = total.size();
             for (auto v: graph[u]) {
                 if (total.find(v) == total.end()) {
@@ -501,6 +500,10 @@ Csr Cluster::run_greedy(Csr &graph) {
             for (auto v: graph[u]) {
                 total.insert(v);
                 if (color[v] == -1) {
+                    if (connect_tag[v] != color_n) {
+                        connect_tag[v] = color_n;
+                        connect[v] = 0;
+                    }
                     connect[v]++;
                     neighbors.push({connect[v], v});
                     // degree[v]--;
