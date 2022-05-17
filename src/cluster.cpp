@@ -33,6 +33,7 @@ Csr Cluster::color2ans(std::vector<int> &color, Csr &graph) {
         while(!colors.empty()) {
             auto i = colors.lower_bound({sum - patch_size, 0});
             if (i == colors.end()) break;
+            if (sum == 0) sum += patch_size / 4;
             sum -= (*i)[0];
             color_map[(*i)[1]] = c;
             colors.erase(i);
@@ -333,7 +334,7 @@ Csr Cluster::run_kmeans(Csr &graph) {
             ma = max(ma, total[u].size());
             if (total[u].size() > patch_size) cnt++;
         }
-        printf("cnt = %d\n", cnt);
+        // printf("cnt = %d\n", cnt);
         if (ma <= patch_size) break;
 
         // update seeds
@@ -343,10 +344,10 @@ Csr Cluster::run_kmeans(Csr &graph) {
         }
         for (int p = 0; p < owned.size(); p++) {
             // if (total[p].size() <= patch_size) continue;
-            if (cnt < patch_size / 5 && round % round_n == 0 && total[p].size() <= patch_size) {
-                locked[p] = true;
-            }
-            if (locked[p]) continue;
+            // if (cnt < patch_size / 5 && round % round_n == 0 && total[p].size() <= patch_size) {
+            //     locked[p] = true;
+            // }
+            // if (locked[p]) continue;
             queue<int> q;
             for (auto u: owned[p]) {
                 for (auto v: graph[u]) {
