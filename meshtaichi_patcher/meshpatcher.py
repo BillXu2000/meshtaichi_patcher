@@ -161,6 +161,7 @@ class MeshPatcher:
             # axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
             
         # plt.show()
+        # plt.savefig('/home/bx2k/transport/patcher.svg')
         plt.savefig(filename)
     
     def get_owned_rate(self, order):
