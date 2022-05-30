@@ -29,7 +29,7 @@ def mesh2meta_cpp(filename, relations):
     meta = ti.Mesh.generate_meta(data)
     return meta
 
-def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option="greedy", max_order=-1, refresh_cache=False, patch_relation="all"):
+def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option="greedy", max_order=-1, refresh_cache=False, patch_relation="all", debug=False):
     if isinstance(meshes, str):
         mesh_name = meshes
     if not isinstance(meshes, list):
@@ -66,6 +66,7 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option=
     m = meshpatcher.MeshPatcher(total)
     m.patcher.patch_size = patch_size
     m.patcher.cluster_option = cluster_option
+    m.patcher.debug = debug
     m.patch(max_order, patch_relation)
     meta = m.get_meta(relations)
     if cache:

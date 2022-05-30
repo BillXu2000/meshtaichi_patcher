@@ -52,9 +52,10 @@ class MeshPatcher:
             self.patcher.n_order = max_order
             self.n_order = max_order
         if patch_relation == 'all':
-            for i in range(self.n_order):
-                for j in range(self.n_order):
-                    self.patcher.add_patch_relation(i, j)
+            self.patcher.add_all_patch_relation()
+            # for i in range(self.n_order):
+            #     for j in range(self.n_order):
+            #         self.patcher.add_patch_relation(i, j)
         else:
             c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
             for relation in patch_relation:

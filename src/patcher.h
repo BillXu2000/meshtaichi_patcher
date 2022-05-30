@@ -13,6 +13,9 @@ struct Patcher {
     std::set<std::array<int, 2>> patch_relation;
     
     std::string cluster_option;
+    bool all_patch_relation = false;
+    
+    bool debug = false;
 
     Patcher() {}
     int get_size(int order);
@@ -33,4 +36,8 @@ struct Patcher {
     pybind11::array_t<float> get_pos();
 
     void add_patch_relation(int u, int v);
+    void add_all_patch_relation();
+
+    void start_timer(std::string);
+    void print_timer(std::string);
 };

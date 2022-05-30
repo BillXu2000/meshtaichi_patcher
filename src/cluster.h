@@ -8,6 +8,7 @@ struct Cluster {
     Cluster() {}
     Csr run(Csr &graph);
     Csr run_greedy(Csr &graph);
+    Csr run_greedy_cv(Csr &graph);
     Csr run_kmeans(Csr &graph);
     Csr run_unbound(Csr &graph);
 

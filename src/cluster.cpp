@@ -5,7 +5,8 @@
 
 Csr Cluster::run(Csr &graph) {
     if (option == "kmeans") return run_kmeans(graph);
-    if (option == "greedy") return run_greedy(graph);
+    // if (option == "greedy") return run_greedy(graph);
+    if (option == "greedy") return run_greedy_cv(graph);
     if (option == "unbound") return run_unbound(graph);
     std::cerr << option << ": option not valid!\n";
     assert(false);
@@ -451,6 +452,75 @@ Csr Cluster::run_kmeans(Csr &graph) {
                 }
             }
         }
+    }
+    return color2ans(color, graph);
+}
+
+Csr Cluster::run_greedy_cv(Csr &graph) {
+    using namespace std;
+    assert(patch_size != -1); // patch_size has to be set before run cluster
+    auto graph_inv = graph.transpose();
+    typedef array<int, 2> int2;
+    int n = graph.size();
+    priority_queue<int2, vector<int2>> seeds;
+    vector<int> color(n), degree(n);
+    for (int i = 0; i < n; i++) {
+        color[i] = -1;
+        // degree[i] = graph[i].size();
+        degree[i] = 0;
+        seeds.push({degree[i], i});
+    }
+    vector<int> connect(n), visited(n), connect_tag(n);
+    for (int i = 0; i < n; i++) {
+        connect_tag[i] = -1;
+        visited[i] = -1;
+    }
+    int color_n = 0;
+    while (!seeds.empty()) {
+        int seed = seeds.top()[1];
+        seeds.pop();
+        if (color[seed] != -1) continue;
+        priority_queue<int2> neighbors;
+        unordered_set<int> total, owned;
+        neighbors.push({0, seed});
+        while (!neighbors.empty()) {
+            int u = neighbors.top()[1], k = neighbors.top()[0];
+            neighbors.pop();
+            if (color[u] == color_n || visited[u] == color_n) continue;
+            visited[u] = color_n;
+            int sum = total.size();
+            for (auto w: graph[u]) {
+                if (owned.find(w) != owned.end()) continue;
+                for (auto v: graph_inv[w]) {
+                    if (total.find(v) == total.end()) {
+                        sum++;
+                    }
+                    if (sum > patch_size) break;
+                }
+                if (sum > patch_size) break;
+            }
+            if (sum > patch_size) continue;
+            color[u] = color_n;
+            for (auto w: graph[u]) {
+                if (owned.find(w) != owned.end()) continue;
+                owned.insert(w);
+                for (auto v: graph_inv[w]) {
+                    total.insert(v);
+                    if (color[v] == -1) {
+                        if (connect_tag[v] != color_n) {
+                            connect_tag[v] = color_n;
+                            connect[v] = 0;
+                        }
+                        connect[v]++;
+                        neighbors.push({connect[v], v});
+                        // degree[v]--;
+                        degree[v]++;
+                        seeds.push({degree[v], v});
+                    }
+                }
+            }
+        }
+        color_n++;
     }
     return color2ans(color, graph);
 }

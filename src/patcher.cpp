@@ -1,6 +1,7 @@
 #include "patcher.h"
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 int Patcher::get_size(int order) {
     return order ? relation[{order, 0}].size() : relation[{0, n_order - 1}].size();
@@ -94,31 +95,70 @@ void Patcher::generate_elements() {
     }
 }
 
+namespace {
+    std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> times;
+}
+
+void Patcher::start_timer(std::string name) {
+    if (debug) {
+        times[name] = std::chrono::high_resolution_clock::now();
+    }
+}
+
+void Patcher::print_timer(std::string name) {
+    if (debug) {
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end - times[name];
+        std::cout << name << " time: " << diff.count() << "\n";
+    }
+}
+
 void Patcher::patch() {
     using namespace std;
-    auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
+    // auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
+    auto rel_cluster = get_relation(n_order - 1, 0);
+    start_timer("cluster");
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
     cluster.option = cluster_option;
     auto patch = cluster.run(rel_cluster);
+    print_timer("cluster");
+    for (int order = 0; order < n_order - 1; order++) {
+        get_relation(n_order - 1, order);
+    }
+    start_timer("owned");
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
+        int pro_cnt = 0;
+        start_timer(to_string(order) + " order");
         for (int p = 0; p < patch.size(); p++) {
             for (auto u: patch[p]) {
                 for (auto v: rel[u]) {
                     color[v] = p;
+                    pro_cnt++;
                 }
             }
         }
-        vector<array<int, 2> > pairs;
-        for (int i = 0; i < color.size(); i++) {
-            pairs.push_back({color[i], i});
-        }
-        owned[order] = Csr(pairs);
+        print_timer(to_string(order) + " order");
+        // vector<array<int, 2> > pairs;
+        // for (int i = 0; i < color.size(); i++) {
+        //     pairs.push_back({color[i], i});
+        // }
+        // owned[order] = Csr(pairs);
+        owned[order] = Csr::from_color(color);
     }
     owned[n_order - 1] = patch;
-    Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
+    // Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
+    if (all_patch_relation) {
+        patch_relation.clear();
+        for (int order = 0; order < n_order - 1; order++) {
+            patch_relation.insert({n_order - 1, order});
+        }
+        patch_relation.insert({0, n_order - 1});
+    }
+    print_timer("owned");
+    start_timer("ribbon");
     for (int order = n_order - 1; order >= 0; order--) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
@@ -145,12 +185,12 @@ void Patcher::patch() {
                 return -1;
             };
             if (false) { // use optimized ribbon now
-                for (auto v: verts[p]) {
-                    auto &rel = get_relation(0, order);
-                    for (auto w: rel[v]) {
-                        add(w);
-                    }
-                }
+                // for (auto v: verts[p]) {
+                //     auto &rel = get_relation(0, order);
+                //     for (auto w: rel[v]) {
+                //         add(w);
+                //     }
+                // }
             }
             else {
                 for (auto u: patch[p]) {
@@ -182,6 +222,7 @@ void Patcher::patch() {
         }
         total[order] = Csr(off_new, val_new);
     }
+    print_timer("ribbon");
 }
 
 Csr& Patcher::get_owned(int order) {
@@ -388,4 +429,8 @@ pybind11::array_t<float> Patcher::get_pos() {
 
 void Patcher::add_patch_relation(int u, int v) {
     patch_relation.insert({u, v});
+}
+
+void Patcher::add_all_patch_relation() {
+    all_patch_relation = true;
 }
