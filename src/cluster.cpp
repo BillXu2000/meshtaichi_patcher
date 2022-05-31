@@ -47,6 +47,45 @@ Csr Cluster::color2ans(std::vector<int> &color, Csr &graph) {
     return Csr(pairs);
 }
 
+Csr Cluster::color2ans_cv(std::vector<int> &color, Csr &graph, Csr &graph_inv) {
+    using namespace std;
+    int n = color.size();
+    map<int, unordered_set<int> > totals, owneds;
+    for (int u = 0; u < n; u++) {
+        totals[color[u]].insert(u);
+        for (auto w: graph[u]) {
+            auto &owned = owneds[color[u]];
+            if (owned.find(w) != owned.end()) continue;
+            owned.insert(w);
+            for (auto v: graph_inv[w]) {
+                totals[color[u]].insert(v);
+            }
+        }
+    }
+    typedef array<int, 2> int2;
+    set<int2> colors;
+    for (auto i: totals) {
+        colors.insert({-int(i.second.size()), i.first});
+    }
+    map<int, int> color_map;
+    for (int c = 0; !colors.empty(); c++) {
+        int sum = 0;
+        while(!colors.empty()) {
+            auto i = colors.lower_bound({sum - patch_size, 0});
+            if (i == colors.end()) break;
+            if (sum == 0) sum += patch_size / 4;
+            sum -= (*i)[0];
+            color_map[(*i)[1]] = c;
+            colors.erase(i);
+        }
+    }
+    vector<array<int, 2> > pairs;
+    for (int u = 0; u < n; u++) {
+        pairs.push_back({color_map[color[u]], u});
+    }
+    return Csr(pairs);
+}
+
 Csr Cluster::run_unbound(Csr &graph) {
     using namespace std;
     typedef array<int, 2> int2;
@@ -522,7 +561,7 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
         }
         color_n++;
     }
-    return color2ans(color, graph);
+    return color2ans_cv(color, graph, graph_inv);
 }
 
 Csr Cluster::run_greedy(Csr &graph) {
