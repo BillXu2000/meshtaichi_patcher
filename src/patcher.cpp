@@ -64,23 +64,36 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
 
 void Patcher::generate_elements() {
     using namespace std;
+    // auto &rel = get_relation(0, n_order - 1);
     get_relation(0, n_order - 1);
+    auto &rel = relation[{n_order - 1, 0}];
     for (int order = 1; order < n_order; order++) {
         if (relation.find({order, 0}) != relation.end()) {
             continue;
         }
-        auto &rel = relation[{n_order - 1, 0}];
         vector<int> offset, value;
-        set<vector<int> > s;
+        vector<int> offset_ce, value_ce;
+        // set<vector<int> > s;
+        map<vector<int>, int> s;
+        int m = 0;
         offset.push_back(0);
+        offset_ce.push_back(0);
         for (int u = 0; u < rel.size(); u++) {
             vector<int> subset, k(rel[u].begin(), rel[u].end());
             sort(k.begin(), k.end());
             function<void(int)> fun = [&](int i) {
-                if (subset.size() == order + 1 && s.find(subset) == s.end()) {
-                    value.insert(value.end(), subset.begin(), subset.end());
-                    offset.push_back(value.size());
-                    s.insert(subset);
+                if (subset.size() == order + 1) {
+                    auto iter = s.find(subset);
+                    if (iter == s.end()) {
+                        value.insert(value.end(), subset.begin(), subset.end());
+                        offset.push_back(value.size());
+                        // s.insert(subset);
+                        // iter = s.insert(make_pair(subset, m));
+                        s.insert(make_pair(subset, m));
+                        m++;
+                    }
+                    // value_ce.push_back(iter->second);
+                    value_ce.push_back(s[subset]);
                     return;
                 }
                 if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
@@ -90,8 +103,10 @@ void Patcher::generate_elements() {
                 subset.erase(subset.end() - 1);
             };
             fun(0);
+            offset_ce.push_back(value_ce.size());
         }
         relation[{order, 0}] = Csr(offset, value);
+        relation[{n_order - 1, order}] = Csr(offset_ce, value_ce);
     }
 }
 
@@ -114,24 +129,27 @@ void Patcher::print_timer(std::string name) {
 }
 
 void Patcher::patch() {
+    start_timer("cpp patch");
+    start_timer("cluster");
     using namespace std;
     // auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
     auto rel_cluster = get_relation(n_order - 1, 0);
-    start_timer("cluster");
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
     cluster.option = cluster_option;
     auto patch = cluster.run(rel_cluster);
     print_timer("cluster");
-    for (int order = 0; order < n_order - 1; order++) {
-        get_relation(n_order - 1, order);
-    }
     start_timer("owned");
+    for (int order = 0; order < n_order - 1; order++) {
+        start_timer("relation order " + to_string(order));
+        get_relation(n_order - 1, order);
+        print_timer("relation order " + to_string(order));
+    }
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
         int pro_cnt = 0;
-        start_timer(to_string(order) + " order");
+        // start_timer(to_string(order) + " order");
         for (int p = 0; p < patch.size(); p++) {
             for (auto u: patch[p]) {
                 for (auto v: rel[u]) {
@@ -140,7 +158,7 @@ void Patcher::patch() {
                 }
             }
         }
-        print_timer(to_string(order) + " order");
+        // print_timer(to_string(order) + " order");
         // vector<array<int, 2> > pairs;
         // for (int i = 0; i < color.size(); i++) {
         //     pairs.push_back({color[i], i});
@@ -223,6 +241,7 @@ void Patcher::patch() {
         total[order] = Csr(off_new, val_new);
     }
     print_timer("ribbon");
+    print_timer("cpp patch");
 }
 
 Csr& Patcher::get_owned(int order) {
