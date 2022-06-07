@@ -34,6 +34,28 @@ inline py::array_t<value_type> as_pyarray(std::vector<value_type>&& seq) {
     );
 }
 
+template <typename T>
+py::array_t<T> read_tetgen(std::string fn) {
+    using namespace std;
+    fstream in(fn, fstream::in);
+    int n, m;
+    in >> n;
+    if (fn.substr(fn.size() - 4) == "node") m = 3;
+    if (fn.substr(fn.size() - 4) == "face") m = 3;
+    if (fn.substr(fn.size() - 3) == "ele") m = 4;
+    for (char ch = in.get(); ch != '\n'; ch = in.get());
+    std::vector<T> arr(n * m);
+    for (int i = 0; i < n; i++) {
+        int _;
+        in >> _;
+        for (int j = 0; j < m; j++) {
+            in >> arr[i * m + j];
+        }
+        for (char ch = in.get(); !in.eof() && ch != '\n'; ch = in.get());
+    }
+    return py::array(arr.size(), arr.data());
+}
+
 PYBIND11_MODULE(meshtaichi_patcher_core, m) {
     m.doc() = R"pbdoc(
         Pybind11 example plugin
@@ -175,6 +197,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def_readwrite("n_order", &Patcher::n_order)
         .def_readwrite("patch_size", &Patcher::patch_size)
         .def_readwrite("cluster_option", &Patcher::cluster_option)
+        .def_readwrite("debug", &Patcher::debug)
         .def("get_size", &Patcher::get_size)
         .def("set_relation", &Patcher::set_relation)
         .def("get_relation", &Patcher::get_relation)
@@ -191,6 +214,15 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("get_pos", &Patcher::get_pos)
 
         .def("add_patch_relation", &Patcher::add_patch_relation)
-        ;
+        .def("add_all_patch_relation", &Patcher::add_all_patch_relation)
 
+        .def("get_mapping", &Patcher::get_mapping)
+        ;
+    
+    m.def("read_tetgen", [](std::string fn) {
+        py::list ans;
+        if (fn.substr(fn.size() - 4) == "node") ans.append(read_tetgen<float>(fn));
+        else ans.append(read_tetgen<int>(fn));
+        return ans;
+    });
 }

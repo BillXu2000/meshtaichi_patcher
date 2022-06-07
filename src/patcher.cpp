@@ -1,6 +1,7 @@
 #include "patcher.h"
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 int Patcher::get_size(int order) {
     return order ? relation[{order, 0}].size() : relation[{0, n_order - 1}].size();
@@ -10,6 +11,18 @@ void Patcher::set_relation(int from_end, int to_end, Csr &rel) {
     if (relation.find({from_end, to_end}) == relation.end()) {
         relation[{from_end, to_end}] = rel;
     }
+}
+
+namespace std {
+    template<> struct hash<vector<int> > {
+        std::size_t operator()(const vector<int> &f) const {
+            std::size_t sum = 0;
+            for (auto i: f) {
+                sum = sum * 998244353 + i;
+            }
+            return sum;
+        }  
+    };
 }
 
 Csr& Patcher::get_relation(int from_end, int to_end) {
@@ -31,7 +44,7 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
         return relation[key];
     }
     auto &to = relation[{to_end, 0}];
-    map<vector<int>, int> ele_dict;
+    unordered_map<vector<int>, int> ele_dict;
     for (int i = 0; i < to.size(); i++) {
         vector<int> k(to[i].begin(), to[i].end());
         sort(k.begin(), k.end());
@@ -61,64 +74,149 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
     return relation[key];
 }
 
+namespace {
+    std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> times;
+}
+
+void Patcher::start_timer(std::string name) {
+    if (debug) {
+        times[name] = std::chrono::high_resolution_clock::now();
+    }
+}
+
+void Patcher::print_timer(std::string name) {
+    if (debug) {
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end - times[name];
+        std::cout << name << " time: " << diff.count() << "\n";
+    }
+}
+
 void Patcher::generate_elements() {
+    start_timer("generate elements");
     using namespace std;
+    // auto &rel = get_relation(0, n_order - 1);
     get_relation(0, n_order - 1);
+    auto &rel = relation[{n_order - 1, 0}];
     for (int order = 1; order < n_order; order++) {
         if (relation.find({order, 0}) != relation.end()) {
             continue;
         }
-        auto &rel = relation[{n_order - 1, 0}];
+        vector<int> cb;
+        function<void(int, vector<int>)> fun = [&](int i, vector<int> ans) {
+            if (ans.size() == order + 1) {
+                cb.insert(cb.end(), ans.begin(), ans.end());
+                return;
+            }
+            if (i == n_order) return;
+            fun(i + 1, ans);
+            ans.push_back(i);
+            fun(i + 1, ans);
+        };
+        fun(0, {});
         vector<int> offset, value;
-        set<vector<int> > s;
+        vector<int> offset_ce, value_ce;
+        // set<vector<int> > s;
+        unordered_map<vector<int>, int> s;
+        int m = 0;
         offset.push_back(0);
+        offset_ce.push_back(0);
         for (int u = 0; u < rel.size(); u++) {
             vector<int> subset, k(rel[u].begin(), rel[u].end());
             sort(k.begin(), k.end());
-            function<void(int)> fun = [&](int i) {
-                if (subset.size() == order + 1 && s.find(subset) == s.end()) {
+            // function<void(int)> fun = [&](int i) {
+            //     if (subset.size() == order + 1) {
+            //         auto iter = s.find(subset);
+            //         if (iter == s.end()) {
+            //             value.insert(value.end(), subset.begin(), subset.end());
+            //             offset.push_back(value.size());
+            //             // s.insert(subset);
+            //             // iter = s.insert(make_pair(subset, m));
+            //             s.insert(make_pair(subset, m));
+            //             m++;
+            //         }
+            //         // value_ce.push_back(iter->second);
+            //         value_ce.push_back(s[subset]);
+            //         return;
+            //     }
+            //     if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
+            //     fun(i + 1);
+            //     subset.push_back(k[i]);
+            //     fun(i + 1);
+            //     subset.erase(subset.end() - 1);
+            // };
+            // fun(0);
+            for (int i = 0; i < cb.size(); i += order + 1) {
+                vector<int> subset(order + 1);
+                for (int j = 0; j <= order; j++) {
+                    subset[j] = k[cb[i + j]];
+                }
+                auto iter = s.find(subset);
+                if (iter == s.end()) {
                     value.insert(value.end(), subset.begin(), subset.end());
                     offset.push_back(value.size());
-                    s.insert(subset);
-                    return;
+                    s.insert(make_pair(subset, m));
+                    m++;
                 }
-                if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
-                fun(i + 1);
-                subset.push_back(k[i]);
-                fun(i + 1);
-                subset.erase(subset.end() - 1);
-            };
-            fun(0);
+                value_ce.push_back(s[subset]);
+            }
+            offset_ce.push_back(value_ce.size());
         }
         relation[{order, 0}] = Csr(offset, value);
+        relation[{n_order - 1, order}] = Csr(offset_ce, value_ce);
     }
+    print_timer("generate elements");
 }
 
 void Patcher::patch() {
+    start_timer("cpp patch");
+    start_timer("cluster");
     using namespace std;
-    auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
+    // auto rel_cluster = get_relation(n_order - 1, 0).mul_unique(get_relation(0, n_order - 1)).remove_self_loop();
+    auto rel_cluster = get_relation(n_order - 1, 0);
     auto cluster = Cluster();
     cluster.patch_size = patch_size;
     cluster.option = cluster_option;
     auto patch = cluster.run(rel_cluster);
+    print_timer("cluster");
+    start_timer("owned");
+    for (int order = 0; order < n_order - 1; order++) {
+        start_timer("relation order " + to_string(order));
+        get_relation(n_order - 1, order);
+        print_timer("relation order " + to_string(order));
+    }
     for (int order = 0; order < n_order - 1; order++) {
         auto &rel = get_relation(n_order - 1, order);
         vector<int> color(get_size(order));
+        int pro_cnt = 0;
+        // start_timer(to_string(order) + " order");
         for (int p = 0; p < patch.size(); p++) {
             for (auto u: patch[p]) {
                 for (auto v: rel[u]) {
                     color[v] = p;
+                    pro_cnt++;
                 }
             }
         }
-        vector<array<int, 2> > pairs;
-        for (int i = 0; i < color.size(); i++) {
-            pairs.push_back({color[i], i});
-        }
-        owned[order] = Csr(pairs);
+        // print_timer(to_string(order) + " order");
+        // vector<array<int, 2> > pairs;
+        // for (int i = 0; i < color.size(); i++) {
+        //     pairs.push_back({color[i], i});
+        // }
+        // owned[order] = Csr(pairs);
+        owned[order] = Csr::from_color(color);
     }
     owned[n_order - 1] = patch;
-    Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
+    // Csr verts = patch.mul_unique(get_relation(n_order - 1, 0));
+    if (all_patch_relation) {
+        patch_relation.clear();
+        for (int order = 0; order < n_order - 1; order++) {
+            patch_relation.insert({n_order - 1, order});
+        }
+        patch_relation.insert({0, n_order - 1});
+    }
+    print_timer("owned");
+    start_timer("ribbon");
     for (int order = n_order - 1; order >= 0; order--) {
         std::vector<int> off_new, val_new;
         off_new.push_back(0);
@@ -145,12 +243,12 @@ void Patcher::patch() {
                 return -1;
             };
             if (false) { // use optimized ribbon now
-                for (auto v: verts[p]) {
-                    auto &rel = get_relation(0, order);
-                    for (auto w: rel[v]) {
-                        add(w);
-                    }
-                }
+                // for (auto v: verts[p]) {
+                //     auto &rel = get_relation(0, order);
+                //     for (auto w: rel[v]) {
+                //         add(w);
+                //     }
+                // }
             }
             else {
                 for (auto u: patch[p]) {
@@ -182,6 +280,8 @@ void Patcher::patch() {
         }
         total[order] = Csr(off_new, val_new);
     }
+    print_timer("ribbon");
+    print_timer("cpp patch");
 }
 
 Csr& Patcher::get_owned(int order) {
@@ -388,4 +488,26 @@ pybind11::array_t<float> Patcher::get_pos() {
 
 void Patcher::add_patch_relation(int u, int v) {
     patch_relation.insert({u, v});
+}
+
+void Patcher::add_all_patch_relation() {
+    all_patch_relation = true;
+}
+
+pybind11::list Patcher::get_mapping(int order) {
+    pybind11::list ans;
+    auto &owned_tmp = owned[order].value;
+    auto &total_tmp = total[order].value;
+    auto own = owned_tmp.mutable_unchecked<1>();
+    auto tot = total_tmp.mutable_unchecked<1>();
+    std::vector<int> g2r(own.shape(0)), l2r(tot.shape(0));
+    for (py::ssize_t i = 0; i < own.shape(0); i++) {
+        g2r[own(i)] = i;
+    }
+    for (py::ssize_t i = 0; i < tot.shape(0); i++) {
+        l2r[i] = g2r[tot(i)];
+    }
+    ans.append(pybind11::array_t<int>(g2r.size(), g2r.data()));
+    ans.append(pybind11::array_t<int>(l2r.size(), l2r.data()));
+    return ans;
 }

@@ -6,27 +6,68 @@ Csr::Csr(py::array_t<int> &_offset, py::array_t<int> &_value): offset(_offset), 
 Csr::Csr(std::vector<int> &_offset, std::vector<int> &_value): offset(py::array_t<int>(_offset.size(), _offset.data())), value(py::array_t<int>(_value.size(), _value.data())) {}
 
 Csr::Csr(std::vector<std::array<int, 2>> pairs) {
-    sort(pairs.begin(), pairs.end());
-    std::vector<int> off_new, val_new;
-    for (int i = 0; i < pairs.size(); i++) {
-        while (pairs[i][0] >= off_new.size()) {
-            off_new.push_back(i);
-        }
-        val_new.push_back(pairs[i][1]);
+    // sort(pairs.begin(), pairs.end());
+    // std::vector<int> off_new, val_new;
+    // for (int i = 0; i < pairs.size(); i++) {
+    //     while (pairs[i][0] >= off_new.size()) {
+    //         off_new.push_back(i);
+    //     }
+    //     val_new.push_back(pairs[i][1]);
+    // }
+    // off_new.push_back(pairs.size());
+    // offset = py::array_t<int>(off_new.size(), off_new.data());
+    // value = py::array_t<int>(val_new.size(), val_new.data());
+    using namespace std;
+    int m = 0;
+    for (auto i: pairs) {
+        m = max(i[0] + 1, m);
     }
-    off_new.push_back(pairs.size());
-    offset = py::array_t<int>(off_new.size(), off_new.data());
-    value = py::array_t<int>(val_new.size(), val_new.data());
+    vector<int> cnt(m), off(m + 1), val(pairs.size());
+    for (auto i: pairs) {
+        cnt[i[0]]++;
+    }
+    off[0] = off[1] = 0;
+    for (int i = 0; i < m - 1; i++) {
+        off[i + 2] = off[i + 1] + cnt[i];
+        // printf("i = %d off = %d\n", i, off[i]);
+    }
+    for (auto i: pairs) {
+        val[off[i[0] + 1]] = i[1];
+        off[i[0] + 1]++;
+    }
+    offset = py::array_t<int>(off.size(), off.data());
+    value = py::array_t<int>(val.size(), val.data());
 }
 
 Csr::Range::Range(int* _b, int* _e): b(_b), e(_e) {}
 
 Csr Csr::from_color(std::vector<int> &c) {
-    std::vector<std::array<int, 2> > pairs;
-    for (int u = 0; u < c.size(); u++) {
-        pairs.push_back({c[u], u});
+    using namespace std;
+    int m = 0;
+    for (auto i: c) {
+        m = max(i + 1, m);
     }
-    return Csr(pairs);
+    vector<int> cnt(m), off(m + 1), val(c.size());
+    for (auto i: c) {
+        cnt[i]++;
+    }
+    off[0] = off[1] = 0;
+    for (int i = 0; i < m - 1; i++) {
+        off[i + 2] = off[i + 1] + cnt[i];
+        // printf("i = %d off = %d\n", i, off[i]);
+    }
+    for (int i = 0; i < c.size(); i++) {
+        val[off[c[i] + 1]] = i;
+        off[c[i] + 1]++;
+    }
+    // offset = py::array_t<int>(off.size(), off.data());
+    // value = py::array_t<int>(val.size(), val.data());
+    // std::vector<std::array<int, 2> > pairs;
+    // for (int u = 0; u < c.size(); u++) {
+    //     pairs.push_back({c[u], u});
+    // }
+    // return Csr(pairs);
+    return Csr(off, val);
 }
 
 int* Csr::Range::begin() {
