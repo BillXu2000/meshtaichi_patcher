@@ -62,54 +62,6 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
     return relation[key];
 }
 
-void Patcher::generate_elements() {
-    using namespace std;
-    // auto &rel = get_relation(0, n_order - 1);
-    get_relation(0, n_order - 1);
-    auto &rel = relation[{n_order - 1, 0}];
-    for (int order = 1; order < n_order; order++) {
-        if (relation.find({order, 0}) != relation.end()) {
-            continue;
-        }
-        vector<int> offset, value;
-        vector<int> offset_ce, value_ce;
-        // set<vector<int> > s;
-        map<vector<int>, int> s;
-        int m = 0;
-        offset.push_back(0);
-        offset_ce.push_back(0);
-        for (int u = 0; u < rel.size(); u++) {
-            vector<int> subset, k(rel[u].begin(), rel[u].end());
-            sort(k.begin(), k.end());
-            function<void(int)> fun = [&](int i) {
-                if (subset.size() == order + 1) {
-                    auto iter = s.find(subset);
-                    if (iter == s.end()) {
-                        value.insert(value.end(), subset.begin(), subset.end());
-                        offset.push_back(value.size());
-                        // s.insert(subset);
-                        // iter = s.insert(make_pair(subset, m));
-                        s.insert(make_pair(subset, m));
-                        m++;
-                    }
-                    // value_ce.push_back(iter->second);
-                    value_ce.push_back(s[subset]);
-                    return;
-                }
-                if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
-                fun(i + 1);
-                subset.push_back(k[i]);
-                fun(i + 1);
-                subset.erase(subset.end() - 1);
-            };
-            fun(0);
-            offset_ce.push_back(value_ce.size());
-        }
-        relation[{order, 0}] = Csr(offset, value);
-        relation[{n_order - 1, order}] = Csr(offset_ce, value_ce);
-    }
-}
-
 namespace {
     std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock>> times;
 }
@@ -126,6 +78,82 @@ void Patcher::print_timer(std::string name) {
         std::chrono::duration<double> diff = end - times[name];
         std::cout << name << " time: " << diff.count() << "\n";
     }
+}
+
+void Patcher::generate_elements() {
+    start_timer("generate elements");
+    using namespace std;
+    // auto &rel = get_relation(0, n_order - 1);
+    get_relation(0, n_order - 1);
+    auto &rel = relation[{n_order - 1, 0}];
+    for (int order = 1; order < n_order; order++) {
+        if (relation.find({order, 0}) != relation.end()) {
+            continue;
+        }
+        vector<int> cb;
+        function<void(int, vector<int>)> fun = [&](int i, vector<int> ans) {
+            if (ans.size() == order + 1) {
+                cb.insert(cb.end(), ans.begin(), ans.end());
+                return;
+            }
+            if (i == n_order) return;
+            fun(i + 1, ans);
+            ans.push_back(i);
+            fun(i + 1, ans);
+        };
+        fun(0, {});
+        vector<int> offset, value;
+        vector<int> offset_ce, value_ce;
+        // set<vector<int> > s;
+        map<vector<int>, int> s;
+        int m = 0;
+        offset.push_back(0);
+        offset_ce.push_back(0);
+        for (int u = 0; u < rel.size(); u++) {
+            vector<int> subset, k(rel[u].begin(), rel[u].end());
+            sort(k.begin(), k.end());
+            // function<void(int)> fun = [&](int i) {
+            //     if (subset.size() == order + 1) {
+            //         auto iter = s.find(subset);
+            //         if (iter == s.end()) {
+            //             value.insert(value.end(), subset.begin(), subset.end());
+            //             offset.push_back(value.size());
+            //             // s.insert(subset);
+            //             // iter = s.insert(make_pair(subset, m));
+            //             s.insert(make_pair(subset, m));
+            //             m++;
+            //         }
+            //         // value_ce.push_back(iter->second);
+            //         value_ce.push_back(s[subset]);
+            //         return;
+            //     }
+            //     if (subset.size() + k.size() - i < order + 1 || subset.size() >= order + 1) return;
+            //     fun(i + 1);
+            //     subset.push_back(k[i]);
+            //     fun(i + 1);
+            //     subset.erase(subset.end() - 1);
+            // };
+            // fun(0);
+            for (int i = 0; i < cb.size(); i += order + 1) {
+                vector<int> subset(order + 1);
+                for (int j = 0; j <= order; j++) {
+                    subset[j] = k[cb[i + j]];
+                }
+                auto iter = s.find(subset);
+                if (iter == s.end()) {
+                    value.insert(value.end(), subset.begin(), subset.end());
+                    offset.push_back(value.size());
+                    s.insert(make_pair(subset, m));
+                    m++;
+                }
+                value_ce.push_back(s[subset]);
+            }
+            offset_ce.push_back(value_ce.size());
+        }
+        relation[{order, 0}] = Csr(offset, value);
+        relation[{n_order - 1, order}] = Csr(offset_ce, value_ce);
+    }
+    print_timer("generate elements");
 }
 
 void Patcher::patch() {
