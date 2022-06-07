@@ -35,7 +35,7 @@ class MeshPatcher:
     def read(self, filename):
         self.patcher.read(filename)
         self.n_order = self.patcher.n_order
-        self.face = Relation(self.patcher.get_face()).to_numpy()
+        # self.face = Relation(self.patcher.get_face()).to_numpy()
         self.position = self.patcher.get_pos().reshape(-1, 3)
         self.patched = True
     
@@ -70,14 +70,20 @@ class MeshPatcher:
         ans["max_num_per_patch"] = max([len(i) for i in self.total[order]])
         ans["owned_offsets"], tmp = self.owned[order].offset, self.owned[order].value
         ans["total_offsets"], ans["l2g_mapping"] = self.total[order].offset, self.total[order].value
-        g2r = [0] * self.get_size(order)
-        for i, k in enumerate(tmp):
-            g2r[k] = i
-        ans["g2r_mapping"] = np.array(g2r, dtype=np.int32)
-        l2r = []
-        for k in ans["l2g_mapping"]:
-            l2r.append(g2r[k])
-        ans["l2r_mapping"] = np.array(l2r, dtype=np.int32)
+        # g2r = [0] * self.get_size(order)
+        # for i, k in enumerate(tmp):
+        #     g2r[k] = i
+        # ans["g2r_mapping"] = np.array(g2r, dtype=np.int32)
+        # l2r = []
+        # for k in ans["l2g_mapping"]:
+        #     l2r.append(g2r[k])
+        # ans["l2r_mapping"] = np.array(l2r, dtype=np.int32)
+        # mapping = self.patcher.get_mapping(order)
+        # print(mapping[0] - ans["g2r_mapping"])
+        # print(mapping[1] - ans["l2r_mapping"])
+        mapping = self.patcher.get_mapping(order)
+        ans["g2r_mapping"] = mapping[0]
+        ans["l2r_mapping"] = mapping[1]
         return ans
     
     def get_relation_meta(self, from_end, to_end):
@@ -113,6 +119,8 @@ class MeshPatcher:
     def export_obj(self, filename, vm=None, face=False, color=True, binary=False):
         if vm is None:
             vm = self.position
+        if self.face is None:
+            self.face = Relation(self.patcher.get_face()).to_numpy()
         if not color:
             ms = pymeshlab.MeshSet()
             ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face))

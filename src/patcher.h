@@ -40,4 +40,6 @@ struct Patcher {
 
     void start_timer(std::string);
     void print_timer(std::string);
+
+    pybind11::list get_mapping(int);
 };

@@ -97,19 +97,22 @@ def load_mesh(filename):
     base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', filename)[0]
     if ext_name in ['node', 'ele']:
         ans = {}
-        def name2np(filename, type, size):
-            if not os.path.exists(filename):
-                return None
-            lists = []
-            with open(filename, 'r') as fi:
-                lines = fi.readlines()[1: -1]
-            for line in lines:
-                numbers = re.findall(r'\S+', line)
-                lists.append([type(i) for i in numbers[1: size + 1]])
-            return np.array(lists)
-        ans[0] = name2np(f'{base_name}.node', float, 3)
-        ans[3] = name2np(f'{base_name}.ele', int, 4)
-        ans["face"] = name2np(f'{base_name}.face', int, 3)
+        # def name2np(filename, type, size):
+        #     if not os.path.exists(filename):
+        #         return None
+        #     lists = []
+        #     with open(filename, 'r') as fi:
+        #         lines = fi.readlines()[1: -1]
+        #     for line in lines:
+        #         numbers = re.findall(r'\S+', line)
+        #         lists.append([type(i) for i in numbers[1: size + 1]])
+        #     return np.array(lists)
+        # ans[0] = name2np(f'{base_name}.node', float, 3)
+        # ans[3] = name2np(f'{base_name}.ele', int, 4)
+        # ans["face"] = name2np(f'{base_name}.face', int, 3)
+        ans[0] = read_tetgen(f'{base_name}.node')[0].reshape(-1, 3)
+        ans[3] = read_tetgen(f'{base_name}.ele')[0].reshape(-1, 4)
+        ans["face"] = read_tetgen(f'{base_name}.face')[0].reshape(-1, 3)
     else:
         ml_ms = pymeshlab.MeshSet()
         ml_ms.load_new_mesh(filename)

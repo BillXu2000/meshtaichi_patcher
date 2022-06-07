@@ -47,25 +47,29 @@ Csr Cluster::color2ans(std::vector<int> &color, Csr &graph) {
     return Csr(pairs);
 }
 
-Csr Cluster::color2ans_cv(std::vector<int> &color, Csr &graph, Csr &graph_inv) {
+Csr Cluster::color2ans_cv(std::vector<int> &color, Csr &graph, Csr &graph_inv, std::vector<int> &total_size) {
     using namespace std;
     int n = color.size();
-    map<int, unordered_set<int> > totals, owneds;
-    for (int u = 0; u < n; u++) {
-        totals[color[u]].insert(u);
-        for (auto w: graph[u]) {
-            auto &owned = owneds[color[u]];
-            if (owned.find(w) != owned.end()) continue;
-            owned.insert(w);
-            for (auto v: graph_inv[w]) {
-                totals[color[u]].insert(v);
-            }
-        }
-    }
+    // map<int, unordered_set<int> > totals, owneds;
+    // for (int u = 0; u < n; u++) {
+    //     totals[color[u]].insert(u);
+    //     for (auto w: graph[u]) {
+    //         auto &owned = owneds[color[u]];
+    //         if (owned.find(w) != owned.end()) continue;
+    //         owned.insert(w);
+    //         for (auto v: graph_inv[w]) {
+    //             totals[color[u]].insert(v);
+    //         }
+    //     }
+    // }
     typedef array<int, 2> int2;
     set<int2> colors;
-    for (auto i: totals) {
-        colors.insert({-int(i.second.size()), i.first});
+    // for (auto i: totals) {
+    //     // colors.insert({-int(i.second.size()), i.first});
+    //     colors.insert({-int(i.second.size()), i.first});
+    // }
+    for (int i = 0; i < total_size.size(); i++) {
+        colors.insert({-total_size[i], i});
     }
     map<int, int> color_map;
     for (int c = 0; !colors.empty(); c++) {
@@ -83,6 +87,10 @@ Csr Cluster::color2ans_cv(std::vector<int> &color, Csr &graph, Csr &graph_inv) {
     for (int u = 0; u < n; u++) {
         pairs.push_back({color_map[color[u]], u});
     }
+    // vector<array<int, 2> > pairs;
+    // for (int u = 0; u < n; u++) {
+    //     pairs.push_back({color[u], u});
+    // }
     return Csr(pairs);
 }
 
@@ -509,7 +517,7 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
         degree[i] = 0;
         seeds.push({degree[i], i});
     }
-    vector<int> connect(n), visited(n), connect_tag(n);
+    vector<int> connect(n), visited(n), connect_tag(n), total_size;
     for (int i = 0; i < n; i++) {
         connect_tag[i] = -1;
         visited[i] = -1;
@@ -558,10 +566,12 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
                     }
                 }
             }
+            if (sum > patch_size / 10 * 9) break;
         }
+        total_size.push_back(total.size());
         color_n++;
     }
-    return color2ans_cv(color, graph, graph_inv);
+    return color2ans_cv(color, graph, graph_inv, total_size);
 }
 
 Csr Cluster::run_greedy(Csr &graph) {

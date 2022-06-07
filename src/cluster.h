@@ -13,5 +13,5 @@ struct Cluster {
     Csr run_unbound(Csr &graph);
 
     Csr color2ans(std::vector<int>&, Csr&);
-    Csr color2ans_cv(std::vector<int>&, Csr&, Csr&);
+    Csr color2ans_cv(std::vector<int>&, Csr&, Csr&, std::vector<int>&);
 };

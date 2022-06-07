@@ -13,6 +13,18 @@ void Patcher::set_relation(int from_end, int to_end, Csr &rel) {
     }
 }
 
+namespace std {
+    template<> struct hash<vector<int> > {
+        std::size_t operator()(const vector<int> &f) const {
+            std::size_t sum = 0;
+            for (auto i: f) {
+                sum = sum * 998244353 + i;
+            }
+            return sum;
+        }  
+    };
+}
+
 Csr& Patcher::get_relation(int from_end, int to_end) {
     using namespace std;
     array<int, 2> key{from_end, to_end};
@@ -32,7 +44,7 @@ Csr& Patcher::get_relation(int from_end, int to_end) {
         return relation[key];
     }
     auto &to = relation[{to_end, 0}];
-    map<vector<int>, int> ele_dict;
+    unordered_map<vector<int>, int> ele_dict;
     for (int i = 0; i < to.size(); i++) {
         vector<int> k(to[i].begin(), to[i].end());
         sort(k.begin(), k.end());
@@ -105,7 +117,7 @@ void Patcher::generate_elements() {
         vector<int> offset, value;
         vector<int> offset_ce, value_ce;
         // set<vector<int> > s;
-        map<vector<int>, int> s;
+        unordered_map<vector<int>, int> s;
         int m = 0;
         offset.push_back(0);
         offset_ce.push_back(0);
@@ -480,4 +492,22 @@ void Patcher::add_patch_relation(int u, int v) {
 
 void Patcher::add_all_patch_relation() {
     all_patch_relation = true;
+}
+
+pybind11::list Patcher::get_mapping(int order) {
+    pybind11::list ans;
+    auto &owned_tmp = owned[order].value;
+    auto &total_tmp = total[order].value;
+    auto own = owned_tmp.mutable_unchecked<1>();
+    auto tot = total_tmp.mutable_unchecked<1>();
+    std::vector<int> g2r(own.shape(0)), l2r(tot.shape(0));
+    for (py::ssize_t i = 0; i < own.shape(0); i++) {
+        g2r[own(i)] = i;
+    }
+    for (py::ssize_t i = 0; i < tot.shape(0); i++) {
+        l2r[i] = g2r[tot(i)];
+    }
+    ans.append(pybind11::array_t<int>(g2r.size(), g2r.data()));
+    ans.append(pybind11::array_t<int>(l2r.size(), l2r.data()));
+    return ans;
 }

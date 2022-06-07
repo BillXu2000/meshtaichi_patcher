@@ -18,7 +18,8 @@ vec3f = ti.types.vector(3, ti.f32)
 mesh.verts.place({'x' : vec3f}) 
 mesh.edges.place({'y' : vec3f}) 
 # meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=1024, cache=True, cluster_option='kmeans', refresh_cache=True)
-meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=1024, debug=True)
+# meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=1024, debug=True, cache=True, refresh_cache=True)
+meta = meshtaichi_patcher.mesh2meta(obj_name, patch_size=1024, debug=True, cache=True)
 bunny = mesh.build(meta)
 
 pr.disable()
@@ -28,7 +29,7 @@ sortby = SortKey.CUMULATIVE
 ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
 ps.print_stats()
 l = s.getvalue().split('\n')
-print('\n'.join(l[:10]))
+print('\n'.join(l[:20]))
 
 # meta.patcher.stats('/home/bx2k/transport/kmeans3.svg')
 # meta.patcher.export_obj('/home/bx2k/transport/kmeans_old.obj')
