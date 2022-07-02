@@ -16,6 +16,8 @@ struct Csr {
 
     Csr(std::vector<std::array<int, 2>> pairs);
 
+    static Csr from_numpy(py::array_t<int>&);
+
     Csr() {}
 
     static Csr from_color(std::vector<int>&);

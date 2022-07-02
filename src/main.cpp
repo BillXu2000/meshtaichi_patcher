@@ -175,6 +175,7 @@ PYBIND11_MODULE(meshtaichi_patcher_core, m) {
         .def("mul", &Csr::mul)
         .def("mul_unique", &Csr::mul_unique)
         .def("remove_self_loop", &Csr::remove_self_loop)
+        .def("from_numpy", &Csr::from_numpy)
         ;
 
     m.def("get_np_test", [](int n) {

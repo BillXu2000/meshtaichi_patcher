@@ -39,6 +39,21 @@ Csr::Csr(std::vector<std::array<int, 2>> pairs) {
     value = py::array_t<int>(val.size(), val.data());
 }
 
+Csr Csr::from_numpy(py::array_t<int> &values) {
+    using namespace std;
+    auto arr = values.mutable_unchecked<2>();
+    int n = arr.shape(0), m = arr.shape(1);
+    vector<int> off(n + 1), val(n * m);
+    for (int i = 0; i < n; i++) {
+        off[i] = i * m;
+        for (int j = 0; j < m; j++) {
+            val[i * m + j] = arr(i, j);
+        }
+    }
+    off[n] = n * m;
+    return Csr(off, val);
+}
+
 Csr::Range::Range(int* _b, int* _e): b(_b), e(_e) {}
 
 Csr Csr::from_color(std::vector<int> &c) {
