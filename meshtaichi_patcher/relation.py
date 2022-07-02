@@ -9,16 +9,21 @@ class Relation:
             self.offset = csr.offset
             self.value = csr.value
         else:
-            offset = [0] + [len(i) for i in matrix]
-            for i in range(len(matrix)):
-                offset[i + 1] += offset[i]
-            self.offset = np.array(offset)
-            value = []
-            for i in matrix:
-                for j in i:
-                    value.append(j)
-            self.value = np.array(value)
-            self.csr = Csr_cpp(self.offset, self.value)
+            if isinstance(matrix, list):
+                offset = [0] + [len(i) for i in matrix]
+                for i in range(len(matrix)):
+                    offset[i + 1] += offset[i]
+                self.offset = np.array(offset)
+                value = []
+                for i in matrix:
+                    for j in i:
+                        value.append(j)
+                self.value = np.array(value)
+                self.csr = Csr_cpp(self.offset, self.value)
+            else: # numpy
+                self.csr = Csr_cpp.from_numpy(matrix)
+                self.offset = self.csr.offset
+                self.value = self.csr.value
     
     def keys(self):
         return range(len(self.offset) - 1)
