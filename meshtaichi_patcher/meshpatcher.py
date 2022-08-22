@@ -150,9 +150,10 @@ class MeshPatcher:
     def face_matrix(self):
         return self.face
     
-    def stats(self, filename):
+    def stats(self, filename=None):
         # order = self.n_order - 1
         fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 8))
+        ans = {'total_max': [], 'owned_max': [], 'owned_ratio': []}
         for order in range(self.n_order):
             rate = self.owned[order].total_size() / self.total[order].total_size()
             # axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
@@ -163,15 +164,19 @@ class MeshPatcher:
             # axs[0, order].set_ylim(bottom=0)
             # axs[1, order].violinplot([len(i) for i in self.total[order]], showmeans=True)
             axs[1, order].hist(tmp_total, range=rg)
-            axs[1, order].set_title(f"total, owned rate = {'%.2f' % rate}")
+            axs[1, order].set_title(f"total, owned ratio = {'%.2f' % rate}")
             # axs[1, order].set_ylim(bottom=0)
             # axs[2, order].bar(0, rate, label='ribbon rate')
             # axs[2, order].set_ylim(top=1)
             # axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
+            ans['total_max'].append(max(tmp_total))
+            ans['owned_max'].append(max([len(i) for i in self.owned[order]]))
+            ans['owned_ratio'].append(rate)
             
         # plt.show()
         # plt.savefig('/home/bx2k/transport/patcher.svg')
-        plt.savefig(filename)
+        if filename is not None: plt.savefig(filename)
+        return ans
     
     def get_owned_rate(self, order):
         return self.owned[order].total_size() / self.total[order].total_size()
