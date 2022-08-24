@@ -135,17 +135,19 @@ class MeshPatcher:
                     face_colors[u] = color
             ms = pymeshlab.MeshSet()
             ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, f_color_matrix=face_colors))
+        else:
+            vert_colors = np.zeros([self.get_size(0), 4])
+            for p in self.owned[0]:
+                color = [random.random() for i in range(3)]
+                color += [1]
+                for u in p:
+                    vert_colors[u] = color
+            ms = pymeshlab.MeshSet()
+            ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, v_color_matrix=vert_colors))
+        if filename[-4:] == '.obj':
+            ms.save_current_mesh(filename)
+        else:
             ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
-            return
-        vert_colors = np.zeros([self.get_size(0), 4])
-        for p in self.owned[0]:
-            color = [random.random() for i in range(3)]
-            color += [1]
-            for u in p:
-                vert_colors[u] = color
-        ms = pymeshlab.MeshSet()
-        ms.add_mesh(pymeshlab.Mesh(vertex_matrix=vm, face_matrix=self.face, v_color_matrix=vert_colors))
-        ms.save_current_mesh(filename, binary=binary, save_vertex_quality=False)
     
     def face_matrix(self):
         return self.face
