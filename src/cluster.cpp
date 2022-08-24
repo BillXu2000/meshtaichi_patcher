@@ -3,11 +3,15 @@
 #include <queue>
 #include <set>
 
-Csr Cluster::run(Csr &graph) {
-    if (option == "kmeans") return run_kmeans(graph);
+Csr Cluster::run(Csr &graph_cv) {
+    // if (option == "kmeans") return run_kmeans(graph);
     // if (option == "greedy") return run_greedy(graph);
-    if (option == "greedy") return run_greedy_cv(graph);
-    if (option == "unbound") return run_unbound(graph);
+    if (option == "greedy") return run_greedy_cv(graph_cv);
+    if (option == "unbound" || option == 'kmeans') {
+        Csr graph_vc = graph_cv.transpose();
+        Csr graph_cc = graph_cv.mul_unique(graph_vc);
+        return run_unbound(graph_cc);
+    }
     std::cerr << option << ": option not valid!\n";
     assert(false);
     return Csr();

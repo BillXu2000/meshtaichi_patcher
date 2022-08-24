@@ -171,7 +171,7 @@ class MeshPatcher:
             # axs[2, order].set_title(f"owned rate = {'%.2f' % rate}")
             ans['total_max'].append(max(tmp_total))
             ans['owned_max'].append(max([len(i) for i in self.owned[order]]))
-            ans['owned_ratio'].append(rate)
+            ans['owned_ratio'].append(float('%.3f' % rate))
             
         # plt.show()
         # plt.savefig('/home/bx2k/transport/patcher.svg')
