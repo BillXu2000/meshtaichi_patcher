@@ -19,4 +19,4 @@ def get_timing(mesh):
     return cold, warm
 
 for mesh in sys.argv[1:]:
-    print(mesh, os.path.basename(mesh), get_timing(mesh))
+    print(mesh, os.path.basename(mesh), *get_timing(mesh))
