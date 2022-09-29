@@ -12,17 +12,19 @@ ti.init()
 def get_stats(cluster='greedy', patch_size=512):
     mesh = ti.TetMesh()
     # meta = meshtaichi_patcher.mesh2meta(obj_name, cluster_option=cluster, patch_size=512, patch_relation=['fv', 'vf'])
-    meta = meshtaichi_patcher.mesh2meta(mesh_name, cluster_option=cluster, patch_size=patch_size, patch_relation=['ev', 've'], cache=True)
+    meta = meshtaichi_patcher.mesh2meta(mesh_name, cluster_option=cluster, patch_size=patch_size, patch_relation=['ev', 've'], cache=True, refresh_cache=True)
     # bunny = mesh.build(meta)
     patcher = meta.patcher
-    # stats = patcher.stats(cluster + '.svg')
-    stats = patcher.stats()
-    # patcher.export_obj(cluster + '.obj', face=True)
+    stats = patcher.stats(cluster + '.svg')
+    # stats = patcher.stats()
+    # patcher.export_obj(f'{cluster}_{patch_size}.obj', face=True)
     return stats
 
 for cluster in ['greedy', 'kmeans']:
-    sizes = list(range(512, 1024, 128)) + list(range(1024, 3100, 512))
+# for cluster in ['greedy']:
+    # sizes = list(range(512, 1024, 128)) + list(range(1024, 3100, 512))
+    sizes = [1024]
     for patch_size in sizes:
         stats = get_stats(cluster=cluster, patch_size=patch_size)
         ribbon_ratio = 1 - stats['owned_ratio'][0]
-        print(cluster, patch_size, ribbon_ratio)
+        print(cluster, patch_size, ribbon_ratio, stats['patch_num'])

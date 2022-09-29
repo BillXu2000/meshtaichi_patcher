@@ -154,9 +154,10 @@ class MeshPatcher:
     
     def stats(self, filename=None):
         # order = self.n_order - 1
-        fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 8))
-        ans = {'total_max': [], 'owned_max': [], 'owned_ratio': []}
-        for order in range(self.n_order):
+        fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(1 * self.n_order, 8))
+        ans = {'total_max': [], 'owned_max': [], 'owned_ratio': [], 'patch_num': len(self.owned[0])}
+        # for order in range(self.n_order):
+        for order in range(3, self.n_order):
             rate = self.owned[order].total_size() / self.total[order].total_size()
             # axs[0, order].violinplot([len(i) for i in self.owned[order]], showmeans=True)
             tmp_total = [len(i) for i in self.total[order]]
