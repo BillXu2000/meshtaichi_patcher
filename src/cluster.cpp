@@ -3,11 +3,15 @@
 #include <queue>
 #include <set>
 
-Csr Cluster::run(Csr &graph) {
-    if (option == "kmeans") return run_kmeans(graph);
+Csr Cluster::run(Csr &graph_cv) {
+    // if (option == "kmeans") return run_kmeans(graph);
     // if (option == "greedy") return run_greedy(graph);
-    if (option == "greedy") return run_greedy_cv(graph);
-    if (option == "unbound") return run_unbound(graph);
+    if (option == "greedy") return run_greedy_cv(graph_cv);
+    if (option == "unbound" || option == "kmeans") {
+        Csr graph_vc = graph_cv.transpose();
+        Csr graph_cc = graph_cv.mul_unique(graph_vc);
+        return run_unbound(graph_cc);
+    }
     std::cerr << option << ": option not valid!\n";
     assert(false);
     return Csr();
@@ -535,11 +539,13 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
             neighbors.pop();
             if (color[u] == color_n || visited[u] == color_n) continue;
             visited[u] = color_n;
+            unordered_set<int> tmp_total;
             int sum = total.size();
             for (auto w: graph[u]) {
                 if (owned.find(w) != owned.end()) continue;
                 for (auto v: graph_inv[w]) {
-                    if (total.find(v) == total.end()) {
+                    if (total.find(v) == total.end() && tmp_total.find(v) == tmp_total.end()) {
+                        tmp_total.insert(v);
                         sum++;
                     }
                     if (sum > patch_size) break;
@@ -549,7 +555,7 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
             if (sum > patch_size) continue;
             color[u] = color_n;
             for (auto w: graph[u]) {
-                if (owned.find(w) != owned.end()) continue;
+                // if (owned.find(w) != owned.end()) continue;
                 owned.insert(w);
                 for (auto v: graph_inv[w]) {
                     total.insert(v);
@@ -566,7 +572,6 @@ Csr Cluster::run_greedy_cv(Csr &graph) {
                     }
                 }
             }
-            if (sum > patch_size / 10 * 9) break;
         }
         total_size.push_back(total.size());
         color_n++;

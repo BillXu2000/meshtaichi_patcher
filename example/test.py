@@ -18,8 +18,13 @@ mesh = ti.TetMesh()
 # meta = meshtaichi_patcher.mesh2meta(obj_name)
 vec3f = ti.types.vector(3, ti.f32)
 mesh.verts.place({'x' : vec3f}) 
-meta = meshtaichi_patcher.mesh2meta(meshes, patch_size=512)
+# meta = meshtaichi_patcher.mesh2meta(meshes, patch_size=512, relation=['ff'], patch_relation=['ff'])
+meta = meshtaichi_patcher.mesh2meta(meshes, patch_size=512, patch_relation=['fv', 'vf'])
 bunny = mesh.build(meta)
+patcher = meta.patcher
+stats = patcher.stats('out.svg')
+print(stats)
+exit(0)
 
 
 @ti.kernel
