@@ -121,7 +121,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="meshtaichi_patcher",
-    version="0.0.6",
+    version="0.0.8",
     packages=["meshtaichi_patcher"],
     package_dir={"": "."},
     long_description="",
@@ -130,4 +130,8 @@ setup(
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
     python_requires=">=3.6",
+    install_requires=[
+        "pymeshlab",
+        "numpy",
+    ],
 )
