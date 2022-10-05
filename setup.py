@@ -121,10 +121,9 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="meshtaichi_patcher",
-    version="0.0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
+    version="0.0.6",
+    packages=["meshtaichi_patcher"],
+    package_dir={"": "."},
     long_description="",
     ext_modules=[CMakeExtension("meshtaichi_patcher_core")],
     cmdclass={"build_ext": CMakeBuild},

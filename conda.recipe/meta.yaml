@@ -1,6 +1,5 @@
 package:
   name: cmake_example
-  version: 0.0.1
 
 source:
   path: ..
