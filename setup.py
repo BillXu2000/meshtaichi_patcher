@@ -99,12 +99,16 @@ class CMakeBuild(build_ext):
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
-        if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
+        if False and "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ: # disabled
             # self.parallel is a Python 3 only way to set parallel jobs by hand
             # using -j in the build_ext call, not supported by pip or PyPA-build.
             if hasattr(self, "parallel") and self.parallel:
                 # CMake 3.12+ only.
                 build_args += [f"-j{self.parallel}"]
+
+        import multiprocessing
+        num_threads = os.getenv('BUILD_NUM_THREADS', multiprocessing.cpu_count())
+        build_args += [f"-j{num_threads}"]
 
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
@@ -121,7 +125,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="meshtaichi_patcher",
-    version="0.0.8",
+    version="0.0.9",
     packages=["meshtaichi_patcher"],
     package_dir={"": "."},
     long_description="",

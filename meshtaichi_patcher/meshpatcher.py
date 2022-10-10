@@ -1,7 +1,6 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
 import numpy as np, pymeshlab, random
-import matplotlib.pyplot as plt
 
 class MeshPatcher:
     def __init__(self, mesh=None):
@@ -153,6 +152,7 @@ class MeshPatcher:
         return self.face
     
     def stats(self, filename=None):
+        import matplotlib.pyplot as plt
         # order = self.n_order - 1
         fig, axs = plt.subplots(nrows=2, ncols=self.n_order, figsize=(4 * self.n_order, 8))
         ans = {'total_max': [], 'owned_max': [], 'owned_ratio': []}
