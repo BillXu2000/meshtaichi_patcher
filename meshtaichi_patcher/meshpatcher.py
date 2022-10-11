@@ -1,6 +1,6 @@
 from meshtaichi_patcher_core import Patcher_cpp
 from .relation import Relation
-import numpy as np, pymeshlab, random
+import numpy as np, random
 
 class MeshPatcher:
     def __init__(self, mesh=None):
@@ -116,6 +116,7 @@ class MeshPatcher:
         return ans
     
     def export_obj(self, filename, vm=None, face=False, color=True, binary=False):
+        import pymeshlab
         if vm is None:
             vm = self.position
         if self.face is None:

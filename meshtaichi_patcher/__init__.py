@@ -1,7 +1,7 @@
-from meshtaichi_patcher_core import *
+from meshtaichi_patcher_core import read_tetgen
 import json, time, numpy as np
 import taichi as ti
-import pymeshlab, pprint, re, os, subprocess, hashlib
+import pprint, re, os, subprocess, hashlib
 from . import meshpatcher, relation
 from os import path
 
@@ -114,12 +114,22 @@ def load_mesh(filename):
         ans[3] = read_tetgen(f'{base_name}.ele')[0].reshape(-1, 4)
         ans["face"] = read_tetgen(f'{base_name}.face')[0].reshape(-1, 3)
     else:
-        ml_ms = pymeshlab.MeshSet()
-        ml_ms.load_new_mesh(filename)
-        ml_m = ml_ms.current_mesh()
         ans = {}
-        ans[0] = ml_m.vertex_matrix()
-        if len(ml_m.edge_matrix()):
-            ans[1] = ml_m.face_matrix()
-        ans[2] = ml_m.face_matrix()
+        import importlib.util
+        if importlib.util.find_spec('meshio'):
+            import meshio
+            m = meshio.read(filename)
+            ans[0] = m.points
+            for cell in m.cells:
+                if cell.type == 'triangle':
+                    ans[2] = cell.data
+        else:
+            import pymeshlab
+            ml_ms = pymeshlab.MeshSet()
+            ml_ms.load_new_mesh(filename)
+            ml_m = ml_ms.current_mesh()
+            ans[0] = ml_m.vertex_matrix()
+            if len(ml_m.edge_matrix()):
+                ans[1] = ml_m.edge_matrix()
+            ans[2] = ml_m.face_matrix()
     return ans
