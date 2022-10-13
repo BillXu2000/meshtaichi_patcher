@@ -100,7 +100,7 @@ class MeshPatcher:
         for order in range(self.n_order):
             self.owned.append(Relation(self.patcher.get_owned(order)))
             self.total.append(Relation(self.patcher.get_total(order)))
-        c2i = {'v': 0, 'e': 1, 'f': 2, 'c': 3}
+        c2i = {'V': 0, 'E': 1, 'F': 2, 'C': 3}
         ans = {}
         ans["num_patches"] = len(self.owned[-1])
         ans["elements"] = []
