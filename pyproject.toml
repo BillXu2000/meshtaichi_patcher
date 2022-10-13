@@ -1,9 +1,10 @@
 [project]
 name = "meshtaichi_patcher"
-version = "0.0.9"
+version = "0.0.13"
 authors = [
   { name="BillXu2000", email="BillXu2000@126.com" },
 ]
+dependencies = ["meshio", "numpy"]
 description = "a mesh patcher for meshtaichi"
 readme = "readme.md"
 requires-python = ">=3.7"
