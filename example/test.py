@@ -9,7 +9,7 @@ ti.init()
 
 meshes = []
 for i in range(3):
-    mesh = meshtaichi_patcher.load_mesh(obj_name)
+    mesh = meshtaichi_patcher.load_mesh_rawdata(obj_name)
     mesh[0] += i * 200 # mesh[0] is the positions of vertices
     meshes.append(mesh)
 
