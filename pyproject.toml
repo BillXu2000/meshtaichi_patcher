@@ -1,6 +1,6 @@
 [project]
 name = "meshtaichi_patcher"
-version = "0.0.13"
+version = "0.0.14"
 authors = [
   { name="BillXu2000", email="BillXu2000@126.com" },
 ]

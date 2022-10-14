@@ -125,7 +125,6 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="meshtaichi_patcher",
-    # version="0.0.12",
     packages=["meshtaichi_patcher"],
     package_dir={"": "."},
     long_description="",
