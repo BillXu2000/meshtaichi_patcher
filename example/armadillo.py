@@ -14,7 +14,7 @@ def transform(verts, scale, offset):
 def add_mesh(x, y, i):
     x -= model_size / 2
     y -= model_size / 2
-    mesh = Patcher.load_mesh("/home/bx2k/models/armadillo/armadillo0.1.node")
+    mesh = Patcher.load_mesh_rawdata("/home/bx2k/models/armadillo/armadillo0.1.node")
     mesh[0] = transform(mesh[0], model_size, [x, y, model_height(i)])
     meshes.append(mesh)
 

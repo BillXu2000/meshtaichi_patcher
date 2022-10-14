@@ -5,6 +5,41 @@ import pprint, re, os, subprocess, hashlib
 from . import meshpatcher, relation
 from os import path
 
+def load_mesh(meshes, relations=[], 
+              patch_size=256, 
+              cache=False, 
+              cluster_option="greedy", 
+              max_order=-1, 
+              refresh_cache=False, 
+              patch_relation="all", 
+              debug=False) -> ti.MeshInstance:
+    """Create a triangle mesh (a set of vert/edge/face elements) \
+       or a tetrahedron mesh (a set of vert/edge/face/cell elements), \
+       and initialize its connectivity.
+
+        Args:
+            meshes: a string of model file patch, e.g., `"bunny.obj"`.
+            relations: a list of relations, e.g, `['FV', 'VV']`, where `'V'` for Vertex, `'E'` for Edge, `'F'` for Face, and `'C'` for Cell.
+            cache: `True` if uses metadata caching.
+
+        Returns:
+            A MeshInstance.
+
+        Example::
+        >>> import meshtaichi_patcher as Patcher
+        >>> mesh = Patcher.load_mesh("bunny.obj", relations=['FV']) # load model 'bunny.obj' as triangle mesh and initialize Face-Vert relation.
+    """
+    return ti.Mesh._create_instance(mesh2meta(meshes, 
+            relations,
+            patch_size,
+            cache, 
+            cluster_option, 
+            max_order, 
+            refresh_cache, 
+            patch_relation,
+            debug))
+
+
 def mesh2meta_cpp(filename, relations):
     patcher = Patcher()
     start = time.time()
@@ -62,7 +97,7 @@ def mesh2meta(meshes, relations=[], patch_size=256, cache=False, cluster_option=
         if path.exists(cache_path) and not refresh_cache:
             return load_meta(cache_path, relations)
     if isinstance(total, str):
-        total = load_mesh(total)
+        total = load_mesh_rawdata(total)
     m = meshpatcher.MeshPatcher(total)
     m.patcher.patch_size = patch_size
     m.patcher.cluster_option = cluster_option
@@ -93,7 +128,7 @@ def patched_mesh(filename):
     meta = mesh2meta(filename)
     return mesh.build(meta)
 
-def load_mesh(filename):
+def load_mesh_rawdata(filename):
     base_name, ext_name = re.findall(r'^(.*)\.([^.]+)$', filename)[0]
     if ext_name in ['node', 'ele']:
         ans = {}
@@ -133,3 +168,4 @@ def load_mesh(filename):
                 ans[1] = ml_m.edge_matrix()
             ans[2] = ml_m.face_matrix()
     return ans
+
