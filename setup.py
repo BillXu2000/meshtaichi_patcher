@@ -1,4 +1,4 @@
-import os
+import os, glob
 import re
 import subprocess
 import sys
@@ -8,7 +8,11 @@ from setuptools.command.build_ext import build_ext
 
 from pybind11 import get_cmake_dir
 # Available at setup time due to pyproject.toml
-from pybind11.setup_helpers import Pybind11Extension, build_ext
+from pybind11.setup_helpers import Pybind11Extension
+from setuptools.command.build_ext import build_ext as _build_ext
+from pybind11.setup_helpers import ParallelCompile, naive_recompile
+
+ParallelCompile("NPY_NUM_BUILD_JOBS", needs_recompile=naive_recompile).install()
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
@@ -124,23 +128,41 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
 
-if __name__ == '__main__':
-    import os
-    # fd = os.path.split(os.path.abspath(__file__))[0]
-    # src_path = os.path.join(fd, 'src')
-    src_path = './src'
-    ls = os.listdir(src_path)
-    cpp_list = []
-    for fn in ls:
-        if 'cpp' in fn:
-            cpp_list.append(os.path.join(src_path, fn))
-    print(cpp_list)
+# if __name__ == '__main__':
+#     import os
+#     # fd = os.path.split(os.path.abspath(__file__))[0]
+#     # src_path = os.path.join(fd, 'src')
+#     src_path = './src'
+#     ls = os.listdir(src_path)
+#     cpp_list = []
+#     for fn in ls:
+#         if 'cpp' in fn:
+#             cpp_list.append(os.path.join(src_path, fn))
+#     print(cpp_list)
 
 ext_modules = [
-    Pybind11Extension("python_example",
-        cpp_list,
-        ),
+    Pybind11Extension(
+        "meshtaichi_patcher",
+        sorted(glob.glob("src/*.cpp")),
+    ),
 ]
+
+class build_ext(_build_ext):  # type: ignore[misc] # noqa: N801
+    """
+    Customized build_ext that allows an auto-search for the highest supported
+    C++ level for Pybind11Extension. This is only needed for the auto-search
+    for now, and is completely optional otherwise.
+    """
+
+    def build_extensions(self) -> None:
+        """
+        Build extensions, injecting C++ std for Pybind11Extension if needed.
+        """
+        for ext in self.extensions:
+            if hasattr(ext, "_cxx_level") and ext._cxx_level == 0:
+                ext.cxx_std = 11
+
+        super().build_extensions()
 
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.

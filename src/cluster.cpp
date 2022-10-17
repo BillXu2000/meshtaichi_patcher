@@ -12,7 +12,7 @@ Csr Cluster::run(Csr &graph_cv) {
         Csr graph_cc = graph_cv.mul_unique(graph_vc);
         return run_unbound(graph_cc);
     }
-    std::cerr << option << ": option not valid!\n";
+    // std::cerr << option << ": option not valid!\n";
     assert(false);
     return Csr();
 }
