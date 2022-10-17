@@ -154,7 +154,7 @@ def load_mesh_rawdata(filename):
         if importlib.util.find_spec('meshio'):
             import meshio
             m = meshio.read(filename)
-            ans[0] = m.points
+            ans[0] = m.points[:, :3]
             for cell in m.cells:
                 if cell.type == 'triangle':
                     ans[2] = cell.data
