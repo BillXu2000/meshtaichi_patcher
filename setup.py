@@ -6,6 +6,10 @@ import sys
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
+from pybind11 import get_cmake_dir
+# Available at setup time due to pyproject.toml
+from pybind11.setup_helpers import Pybind11Extension, build_ext
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -120,6 +124,23 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
 
+if __name__ == '__main__':
+    import os
+    # fd = os.path.split(os.path.abspath(__file__))[0]
+    # src_path = os.path.join(fd, 'src')
+    src_path = './src'
+    ls = os.listdir(src_path)
+    cpp_list = []
+    for fn in ls:
+        if 'cpp' in fn:
+            cpp_list.append(os.path.join(src_path, fn))
+    print(cpp_list)
+
+ext_modules = [
+    Pybind11Extension("python_example",
+        cpp_list,
+        ),
+]
 
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
@@ -128,8 +149,10 @@ setup(
     packages=["meshtaichi_patcher"],
     package_dir={"": "."},
     long_description="",
-    ext_modules=[CMakeExtension("meshtaichi_patcher_core")],
-    cmdclass={"build_ext": CMakeBuild},
+    # ext_modules=[CMakeExtension("meshtaichi_patcher_core")],
+    ext_modules=ext_modules,
+    # cmdclass={"build_ext": CMakeBuild},
+    cmdclass={"build_ext": build_ext},
     zip_safe=False,
     # extras_require={"test": ["pytest>=6.0"]},
     python_requires=">=3.6",

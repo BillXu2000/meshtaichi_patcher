@@ -1,6 +1,6 @@
 [project]
 name = "meshtaichi_patcher"
-version = "0.0.15"
+version = "0.0.16"
 authors = [
   { name="BillXu2000", email="BillXu2000@126.com" },
 ]
@@ -18,6 +18,7 @@ requires = [
     "wheel",
     "ninja",
     "cmake>=3.12",
+    "pybind11>=2.10.0",
 ]
 build-backend = "setuptools.build_meta"
 
