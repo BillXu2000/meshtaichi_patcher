@@ -142,7 +142,7 @@ class CMakeBuild(build_ext):
 
 ext_modules = [
     Pybind11Extension(
-        "meshtaichi_patcher",
+        "meshtaichi_patcher_core",
         sorted(glob.glob("src/*.cpp")),
     ),
 ]
