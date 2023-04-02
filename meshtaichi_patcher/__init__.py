@@ -151,9 +151,9 @@ def load_mesh_rawdata(filename):
         assert os.path.isfile(name_node), 'node file not found!'
         assert os.path.isfile(name_ele), 'ele file not found!'
         ans[0] = read_tetgen(name_node)[0].reshape(-1, 3)
-        ans[3] = read_tetgen(f'{base_name}.ele')[0].reshape(-1, 4)
+        ans[3] = read_tetgen(name_ele)[0].reshape(-1, 4)
         if os.path.isfile(name_face): 
-            ans["face"] = read_tetgen(f'{base_name}.face')[0].reshape(-1, 3)
+            ans["face"] = read_tetgen(name_face)[0].reshape(-1, 3)
     else:
         ans = {}
         import importlib.util
